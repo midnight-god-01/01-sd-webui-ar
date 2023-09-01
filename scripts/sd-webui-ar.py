@@ -7,7 +7,7 @@ from math import gcd
 
 aspect_ratios_dir = scripts.basedir()
 get_calculator_symbol = "\U0001F4D0" # 📐
-get_switch_values_symbol = "\U000021C5" # ⇅
+switch_values_symbol = "\U000021C5" # ⇅
 get_dimensions_symbol = "\u2B07\ufe0f" # ⬇️
 get_image_dimensions_symbol = "\U0001F5BC" # 🖼
 get_reverse_logic_symbol = "\U0001F503" # 🔃
