@@ -1,0 +1,25 @@
+1:1, 1.0 # A perfect square aspect ratio.
+3:2, 3/2 # Commonly used for traditional 35mm photography.
+4:3, 4/3 # A standard TV and computer monitor aspect ratio.
+16:9, 16/9 # Widescreen HDTV and most modern screens.
+6:13, 6/13 # A unique and unconventional aspect ratio.
+9:16, 9/16 # Portrait orientation used for mobile screens.
+3:5, 3/5 # A tall and narrow aspect ratio.
+2:3, 2/3 # Portrait orientation commonly used in photography.
+19:16, 19/16 # Aspect ratio associated with Fox Movietone.
+5:4, 5/4 # Commonly used in medium format photography.
+11:8, 11/8 # An aspect ratio often used in the academy standard.
+IMAX, 1.43 # The IMAX film format aspect ratio.
+14:9, 14/9 # A widescreen aspect ratio.
+16:10, 16/10 # Commonly used in computer monitors.
+𝜑, 1.6180 # The golden ratio aspect ratio.
+5:3, 5/3 # Aspect ratio used in super 16mm film.
+1.85, 1.85 # Aspect ratio used in U.S. widescreen cinema.
+DCI, 1.9 # Digital IMAX aspect ratio.
+2:1, 2.0 # Univisium aspect ratio.
+70mm, 2.2 # Used in 70mm film format.
+21:9, 21/9 # Cinematic widescreen aspect ratio.
+δ, 2.414 # Silver ratio aspect ratio.
+UPV70, 2.76 # Ultra Panavision 70 aspect ratio.
+32:9, 32/9 # Ultra-wide screen aspect ratio.
+PV, 4.0 # Polyvision aspect ratio.
