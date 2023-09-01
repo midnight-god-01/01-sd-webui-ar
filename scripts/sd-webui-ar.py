@@ -6,12 +6,12 @@ from modules.ui_components import ToolButton
 from math import gcd
 
 aspect_ratios_dir = scripts.basedir()
-CALCULATOR_SYMBOL = "\U0001F4D0"  # 📐
-SWITCH_VALUES_SYMBOL = "\U000021C5"  # ⇅
-DIMENSIONS_SYMBOL = "\u2B07\ufe0f"  # ⬇️
-IMAGE_DIMENSIONS_SYMBOL = "\U0001F5BC"  # 🖼
-REVERSE_LOGIC_SYMBOL = "\U0001F503"  # 🔃
-ROUND_SYMBOL = "\U0001F50D"  # 🔍
+get_calculator_symbol = "\U0001F4D0" # 📐
+get_switch_values_symbol = "\U000021C5" # ⇅
+get_dimensions_symbol = "\u2B07\ufe0f" # ⬇️
+get_image_dimensions_symbol = "\U0001F5BC" # 🖼
+get_reverse_logic_symbol = "\U0001F503" # 🔃
+get_round_symbol = "\U0001F50D" # 🔍
 IMAGE_ROUNDING_MULTIPLIER = 4
 
 class ResButton(ToolButton):
