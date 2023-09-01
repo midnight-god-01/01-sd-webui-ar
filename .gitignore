@@ -1,8 +1,17 @@
-**/.DS_Store
+# Ignore macOS .DS_Store files
+.DS_Store
 
-**/*.swp
-**/.mypy_cache
+# Ignore Vim swap files
+*.swp
 
-*.py[cod]
+# Ignore MyPy cache
+.mypy_cache
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+__pycache__
+
+# Ignore generated aspect ratios and resolutions files
 aspect_ratios.txt
 resolutions.txt
