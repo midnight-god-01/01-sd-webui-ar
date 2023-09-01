@@ -4,7 +4,7 @@ import gradio as gr
 from math import gcd
 
 # Define symbols and constants
-BASE_PATH = "your_base_path_here"  # Replace with the actual base path
+BASE_PATH = scripts.basedir()
 CALCULATOR_SYMBOL = "\U0001F4D0"
 SWITCH_VALUES_SYMBOL = "\U000021C5"
 DIMENSIONS_SYMBOL = "\u2B07\ufe0f"
