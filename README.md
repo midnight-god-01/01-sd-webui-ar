@@ -61,4 +61,3 @@ You can use the calculator to determine new width or height values based on the 
 
 ![Basic usage of the aspect ratio calculator](https://user-images.githubusercontent.com/121050401/229391634-4ec06027-e603-4672-bad9-ec77647b0941.gif)
 
-This should provide a clearer and more organized presentation of your extension and its functionality.
