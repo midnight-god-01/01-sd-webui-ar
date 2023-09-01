@@ -1,11 +1,8 @@
 import contextlib
 from pathlib import Path
-
 import gradio as gr
-
 import modules.scripts as scripts
 from modules.ui_components import ToolButton
-
 from math import gcd
 
 aspect_ratios_dir = scripts.basedir()
@@ -15,21 +12,17 @@ switch_values_symbol = "\U000021C5"
 get_dimensions_symbol = "\u2B07\ufe0f"
 get_image_dimensions_symbol = "\U0001F5BC"
 
-
 class ResButton(ToolButton):
     def __init__(self, res=(512, 512), **kwargs):
         super().__init__(**kwargs)
-
         self.w, self.h = res
 
     def reset(self):
         return [self.w, self.h]
 
-
 class ARButton(ToolButton):
     def __init__(self, ar=1.0, **kwargs):
         super().__init__(**kwargs)
-
         self.ar = ar
 
     def apply(self, w, h):
@@ -40,17 +33,15 @@ class ARButton(ToolButton):
         else:  # set minimum dimension to both
             min_dim = min([w, h])
             w, h = min_dim, min_dim
-
         return list(map(round, [w, h]))
 
     def reset(self, w, h):
         return [self.res, self.res]
 
-
 def parse_aspect_ratios_file(filename):
     labels, values, comments = [], [], []
     file = Path(aspect_ratios_dir, filename)
-
+    
     if not file.exists():
         return labels, values, comments
 
@@ -82,12 +73,11 @@ def parse_aspect_ratios_file(filename):
 
     return labels, values, comments
 
-
 def parse_resolutions_file(filename):
     labels, values, comments = [], [], []
     file = Path(aspect_ratios_dir, filename)
-
-    if not file.exists():
+    
+    if not file exists():
         return labels, values, comments
 
     with open(file, "r", encoding="utf-8") as f:
@@ -120,7 +110,6 @@ def parse_resolutions_file(filename):
 
     return labels, values, comments
 
-
 # TODO: write a generic function handling both cases
 def write_aspect_ratios_file(filename):
     aspect_ratios = [
@@ -132,7 +121,6 @@ def write_aspect_ratios_file(filename):
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(aspect_ratios)
 
-
 def write_resolutions_file(filename):
     resolutions = [
         "1, 512, 512 # 1:1 square\n",
@@ -141,7 +129,6 @@ def write_resolutions_file(filename):
     ]
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(resolutions)
-
 
 def write_js_titles_file(button_titles):
     filename = Path(aspect_ratios_dir, "javascript", "button_titles.js")
@@ -159,7 +146,6 @@ def write_js_titles_file(button_titles):
 
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(content)
-
 
 def get_reduced_ratio(n, d):
     n, d = list(map(int, (n, d)))
@@ -181,7 +167,6 @@ def get_reduced_ratio(n, d):
 
     return f"{w}:{h}"
 
-
 def solve_aspect_ratio(w, h, n, d):
     if w != 0 and w:
         return round(w / (n / d))
@@ -189,7 +174,6 @@ def solve_aspect_ratio(w, h, n, d):
         return round(h * (n / d))
     else:
         return 0
-
 
 class AspectRatioScript(scripts.Script):
     def read_aspect_ratios(self):
@@ -374,7 +358,6 @@ class AspectRatioScript(scripts.Script):
                                             }
                                             return [image, null, null, null, null];
                                         }
-
                                     """
 
                                     # Get image dimensions
