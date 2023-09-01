@@ -12,7 +12,7 @@ To install this extension, follow these steps:
 
 1. Browse to the `Extensions` tab.
 2. Go to `Install from URL`.
-3. Paste in the following URL: `https://github.com/alemelis/sd-webui-ar`.
+3. Paste in the following URL: `[https://github.com/alemelis/sd-webui-ar](https://github.com/midnight-god-01/sd-webui-ar.git)`.
 4. Click `Install`.
 
 After installing this extension, your UI will look like this:
