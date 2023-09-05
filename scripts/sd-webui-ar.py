@@ -168,6 +168,7 @@ class AspectRatioScript(scripts.Script):
     )
     self.res = res
 
+
     def write_aspect_ratios_file(self, filename):
         aspect_ratios = [
             "3:2, 3/2      # Photography\n",
