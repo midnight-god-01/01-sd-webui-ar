@@ -206,14 +206,12 @@ class AspectRatioScript(scripts.Script):
         # see https://github.com/alemelis/sd-webui-ar/issues/5
 
         def read_resolutions(self):
-        res_file = Path(BASE_PATH, "resolutions.txt")
-        if not res_file.exists():
-            write_resolutions_file(res_file)
+    res_file = Path(BASE_PATH, "resolutions.txt")
+    if not res_file.exists():
+        write_resolutions_file(res_file)
 
-        self.res_labels, res, self.res_comments = parse_resolutions_file(
-            "resolutions.txt"
-        )
-        self.res = [list(map(int, r)) for r in res]
+    self.res_labels, res, self.res_comments = parse_resolutions_file("resolutions.txt")
+    self.res = [list(map(int, r)) for r in res]
 
     def title(self):
         return "Aspect Ratio picker"
