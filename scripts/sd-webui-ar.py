@@ -63,7 +63,7 @@ def parse_aspect_ratios_file(filename):
     labels, values, comments = [], [], []
     file = Path(BASE_PATH, filename)
 
-    if not file exists():
+    if not file.exists():
         return labels, values, comments
 
     with open(file, "r", encoding="utf-8") as f:
@@ -91,7 +91,7 @@ def parse_resolutions_file(filename):
     labels, values, comments = [], [], []
     file = Path(BASE_PATH, filename)
 
-    if not file exists():
+    if not file.exists():
         return labels, values, comments
 
     with open(file, "r", encoding="utf-8") as f:
