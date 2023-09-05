@@ -163,9 +163,9 @@ class AspectRatioScript(scripts.Script):
         if not res_file.exists():
             self.write_resolutions_file(res_file)
 
-        self.res_labels, res, self.res_comments = parse_file(
-            "resolutions.txt", lambda x: list(map(int, x.split(',')))
-        )
+self.res_labels, res, self.res_comments = parse_file(
+    "resolutions.txt", lambda x: list(map(int, x.split(',')))
+)
         self.res = res
 
     def write_aspect_ratios_file(self, filename):
