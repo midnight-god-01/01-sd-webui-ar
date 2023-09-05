@@ -205,7 +205,7 @@ class AspectRatioScript(scripts.Script):
         # TODO: use comments as tooltips
         # see https://github.com/alemelis/sd-webui-ar/issues/5
 
-        def read_resolutions(self):
+    def read_resolutions(self):
     res_file = Path(BASE_PATH, "resolutions.txt")
     if not res_file.exists():
         write_resolutions_file(res_file)
