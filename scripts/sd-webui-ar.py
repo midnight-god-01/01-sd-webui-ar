@@ -81,14 +81,14 @@ def parse_file(filename, parse_function):
 
         parts = line.strip().split("#")
         label, value = parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
-        
-        # Check if there's at least one element in `parts` before accessing it
-        if len(parts) > 0:
-            # Convert the numeric part to float
-            numeric_value = parse_function(parts[0].split()[0])
+
+        # Extract the numeric part (e.g., "3:2" -> "3.0:2.0" -> (3.0, 2.0))
+        numeric_parts = parts[0].split(":")
+        if len(numeric_parts) == 2:
+            numeric_value = parse_function(float(numeric_parts[0]) / float(numeric_parts[1]))
         else:
             numeric_value = 0.0
-        
+
         labels.append(label)
         values.append(numeric_value)
         comments.append(value)
