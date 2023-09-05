@@ -479,72 +479,72 @@ class AspectRatioScript(scripts.Script):
                             _js=current_tab_image,
                         )
 
-                    # Create rounded aspect ratio button
-                    with contextlib.suppress(AttributeError):
-                        if is_img2img:
-                            resolution = [self.i2i_w, self.i2i_h]
-                            arc_round_button.click(
-                                fn=ARButton(
-                                    ar=arc_ar_display.value,
-                                    value=arc_ar_display.value,
-                                ).apply,
-                                inputs=resolution,
-                                outputs=resolution,
-                            )
-                        else:
-                            resolution = [self.t2i_w, self.t2i_h]
-                            arc_round_button.click(
-                                fn=ARButton(
-                                    ar=arc_ar_display.value,
-                                    value=arc_ar_display.value,
-                                ).apply,
-                                inputs=resolution,
-                                outputs=resolution,
-                            )
+                # Create rounded aspect ratio button
+with contextlib.suppress(AttributeError):
+    if is_img2img:
+        resolution = [self.i2i_w, self.i2i_h]
+        arc_round_button.click(
+            fn=ARButton(
+                ar=arc_ar_display.value,
+                value=arc_ar_display.value,
+            ).apply,
+            inputs=resolution,
+            outputs=resolution,
+        )
+    else:
+        resolution = [self.t2i_w, self.t2i_h]
+        arc_round_button.click(
+            fn=ARButton(
+                ar=arc_ar_display.value,
+                value=arc_ar_display.value,
+            ).apply,
+            inputs=resolution,
+            outputs=resolution,
+        )
+
+with gr.Row(
+    elem_id=f'arsp__{"img" if is_img2img else "txt"}2img_row_res_buttons'
+):
+    with contextlib.suppress(AttributeError):
+        if is_img2img:
+            resolution = [self.i2i_w, self.i2i_h]
+        else:
+            resolution = [self.t2i_w, self.t2i_h]
+
+        with gr.Column():
+            arc_show_resolution_buttons = ToolButton(
+                value=IMAGE_DIMENSIONS_SYMBOL,
+                visible=True,
+                variant="secondary",
+                elem_id="arsp__arc_show_resolution_buttons_button",
+            )
+
+            arc_hide_resolution_buttons = ToolButton(
+                value=IMAGE_DIMENSIONS_SYMBOL,
+                visible=False,
+                variant="primary",
+                elem_id="arsp__arc_hide_resolution_buttons_button",
+            )
+
+            arc_show_resolution_buttons.click(
+                lambda res, w, h: (res, w, h),
+                inputs=resolution,
+                outputs=[
+                    arc_desired_width,
+                    arc_desired_height,
+                ],
+            )
+
+            arc_hide_resolution_buttons.click(
+                lambda res, w, h: (res, w, h),
+                inputs=resolution,
+                outputs=[
+                    arc_desired_width,
+                    arc_desired_height,
+                ],
+            )
 
             with gr.Row(
-                elem_id=f'arsp__{"img" if is_img2img else "txt"}2img_row_res_buttons'
-            ):
-                with contextlib.suppress(AttributeError):
-                    if is_img2img:
-                        resolution = [self.i2i_w, self.i2i_h]
-                    else:
-                        resolution = [self.t2i_w, self.t2i_h]
-
-                    with gr.Column():
-                        arc_show_resolution_buttons = ToolButton(
-                            value=IMAGE_DIMENSIONS_SYMBOL,
-                            visible=True,
-                            variant="secondary",
-                            elem_id="arsp__arc_show_resolution_buttons_button",
-                        )
-
-                        arc_hide_resolution_buttons = ToolButton(
-                            value=IMAGE_DIMENSIONS_SYMBOL,
-                            visible=False,
-                            variant="primary",
-                            elem_id="arsp__arc_hide_resolution_buttons_button",
-                        )
-
-                        arc_show_resolution_buttons.click(
-                            lambda res, w, h: (res, w, h),
-                            inputs=resolution,
-                            outputs=[
-                                arc_desired_width,
-                                arc_desired_height,
-                            ],
-                        )
-
-                        arc_hide_resolution_buttons.click(
-                            lambda res, w, h: (res, w, h),
-                            inputs=resolution,
-                            outputs=[
-                                arc_desired_width,
-                                arc_desired_height,
-                            ],
-                        )
-
-                        with gr.Row(
                 elem_id=f'arsp__{"img" if is_img2img else "txt"}2img_row_res_tool_buttons'
             ):
                 with contextlib.suppress(AttributeError):
@@ -565,7 +565,7 @@ class AspectRatioScript(scripts.Script):
                                 arc_desired_height,
                             ],
                         )
-
+                        
             # Show calculator pane (and reset number input values)
             arc_show_calculator.click(
                 lambda: [
