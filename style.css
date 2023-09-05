@@ -24,7 +24,7 @@ button#arsp__arc_show_calculator_button,
 button#arsp__arc_hide_calculator_button,
 button#arsp__arc_show_logic_button,
 button#arsp__arc_hide_logic_button {
-    max-width: 40px !important;
+    max-width: 30px !important;
     min-width: unset !important;
     padding: var(--size-0-5) var(--size-2) !important;
 }
