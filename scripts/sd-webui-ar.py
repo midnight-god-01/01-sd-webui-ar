@@ -154,11 +154,11 @@ class AspectRatioScript(scripts.Script):
         ) = parse_file("aspect_ratios.txt", float)
         self.aspect_ratios = aspect_ratios
 
-        # TODO: check for duplicates
-        # TODO: check for invalid values
-        # TODO: use comments as tooltips
+# TODO: check for duplicates
+# TODO: check for invalid values
+# TODO: use comments as tooltips
 
-    def read_resolutions(self):
+def read_resolutions(self):
     res_file = Path(BASE_PATH, "resolutions.txt")
     if not res_file.exists():
         self.write_resolutions_file(res_file)
@@ -168,16 +168,15 @@ class AspectRatioScript(scripts.Script):
     )
     self.res = res
 
-
-    def write_aspect_ratios_file(self, filename):
-        aspect_ratios = [
-            "3:2, 3/2      # Photography\n",
-            "4:3, 4/3      # Television photography\n",
-            "16:9, 16/9    # Television photography\n",
-            "1.85:1, 1.85  # Cinematography\n",
-            "2.39:1, 2.39  # Cinematography",
-        ]
-        write_file(filename, aspect_ratios)
+def write_aspect_ratios_file(self, filename):
+    aspect_ratios = [
+        "3:2, 3/2      # Photography\n",
+        "4:3, 4/3      # Television photography\n",
+        "16:9, 16/9    # Television photography\n",
+        "1.85:1, 1.85  # Cinematography\n",
+        "2.39:1, 2.39  # Cinematography",
+    ]
+    write_file(filename, aspect_ratios)
 
     def write_resolutions_file(self, filename):
         resolutions = [
