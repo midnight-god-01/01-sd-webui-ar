@@ -142,6 +142,9 @@ class AspectRatioScript(scripts.Script):
         self.res = []
         self.res_comments = []
 
+    def title(self):
+        return "Aspect Ratio Calculator"
+        
     def read_aspect_ratios(self):
         ar_file = Path(BASE_PATH, "aspect_ratios.txt")
         if not ar_file.exists():
