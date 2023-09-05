@@ -716,9 +716,3 @@ class AspectRatioScript(scripts.Script):
             t2t_w, t2t_h = self.compute_aspect_ratio(ar, t2t_w, t2t_h)
 
         return t2t_w, t2t_h
-
-
-script = AspectRatioScript()
-interface = gr.Interface(fn=script, inputs=["t2i_w", "t2i_h", "ar"], outputs=["t2i_w", "t2i_h"])
-interface.launch()  # You can change this to gr.Interface(fn=script.show, inputs=None) for just the web UI without the calculator.
-
