@@ -82,11 +82,11 @@ def parse_file(filename, parse_function):
         parts = line.strip().split("#")
         label, value = parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
 
-        # Extract the numeric part (e.g., "3:2" -> "3.0:2.0" -> (3.0, 2.0))
-        numeric_parts = parts[0].split(":")
-        if len(numeric_parts) == 2:
+        # Split the label by comma and slash, then convert to float if possible
+        numeric_parts = re.split(r'[,:/]', label)
+        try:
             numeric_value = parse_function(float(numeric_parts[0]) / float(numeric_parts[1]))
-        else:
+        except (ValueError, IndexError, ZeroDivisionError):
             numeric_value = 0.0
 
         labels.append(label)
