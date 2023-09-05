@@ -1,10 +1,11 @@
+/* Margin and gap adjustments for aspect ratio containers */
 #arsp__txt2img_container_aspect_ratio,
 #arsp__img2img_container_aspect_ratio {
     gap: 5px !important;
-    margin-top: 3px;
-    margin-bottom: 3px;
+    margin: 3px 0;
 }
 
+/* Gap adjustments for rows related to aspect ratio and resolutions */
 #arsp__txt2img_row_aspect_ratio,
 #arsp__txt2img_row_resolutions,
 #arsp__img2img_row_aspect_ratio,
@@ -12,6 +13,7 @@
     gap: 8px;
 }
 
+/* Button styles within aspect ratio and resolutions rows */
 #arsp__txt2img_row_aspect_ratio button,
 #arsp__txt2img_row_resolutions button,
 #arsp__img2img_row_aspect_ratio button,
@@ -20,23 +22,23 @@
     max-width: unset !important;
 }
 
+/* Button styles for specific buttons */
 button#arsp__arc_show_calculator_button,
 button#arsp__arc_hide_calculator_button,
 button#arsp__arc_show_logic_button,
 button#arsp__arc_hide_logic_button {
-    max-width: 30px !important;
+    max-width: 40px !important;
     min-width: unset !important;
     padding: var(--size-0-5) var(--size-2) !important;
 }
 
-/* TODO: Use Gradio instead if possible */
+/* Styling for arsp__arc_ar_display_text */
 #arsp__arc_ar_display_text {
     height: 22px;
     overflow: hidden !important;
 }
 
 /* Fix for Lobe theme */
-/* https://github.com/canisminor1990/sd-webui-lobe-theme/blob/d4c4a48e8025d32b202716d4ab8d806580752256/src/styles/components/button.ts */
 .hide.svelte-1ipelgc {
     display: none !important;
 }
