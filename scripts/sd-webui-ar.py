@@ -159,14 +159,14 @@ class AspectRatioScript(scripts.Script):
         # TODO: use comments as tooltips
 
     def read_resolutions(self):
-        res_file = Path(BASE_PATH, "resolutions.txt")
-        if not res_file.exists():
-            self.write_resolutions_file(res_file)
+    res_file = Path(BASE_PATH, "resolutions.txt")
+    if not res_file.exists():
+        self.write_resolutions_file(res_file)
 
     self.res_labels, res, self.res_comments = parse_file(
-    "resolutions.txt", lambda x: list(map(int, x.split(',')))
-)
-        self.res = res
+        "resolutions.txt", lambda x: list(map(int, x.split(',')))
+    )
+    self.res = res
 
     def write_aspect_ratios_file(self, filename):
         aspect_ratios = [
