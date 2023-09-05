@@ -79,13 +79,19 @@ def parse_file(filename, parse_function):
         if line.startswith("#"):
             continue
 
-        label, *rest = line.strip().split(",")
-        value = rest[0]
-        comment = rest[1] if len(rest) > 1 else ""
-
+        parts = line.strip().split("#")
+        label, value = parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
+        
+        # Check if there's at least one element in `parts` before accessing it
+        if len(parts) > 0:
+            # Convert the numeric part to float
+            numeric_value = parse_function(parts[0].split()[0])
+        else:
+            numeric_value = 0.0
+        
         labels.append(label)
-        values.append(parse_function(value))
-        comments.append(comment)
+        values.append(numeric_value)
+        comments.append(value)
 
     return labels, values, comments
 
