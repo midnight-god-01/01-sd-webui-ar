@@ -1,7 +1,6 @@
 import contextlib
 from pathlib import Path
 import gradio as gr
-import re
 import modules.scripts as scripts
 from modules.ui_components import ToolButton
 from math import gcd
@@ -17,7 +16,6 @@ IMAGE_ROUNDING_MULTIPLIER = 4
 
 is_reverse_logic_mode = False  # FIXME: Global value
 
-
 class ResButton(ToolButton):
     def __init__(self, res=(512, 512), **kwargs):
         super().__init__(**kwargs)
@@ -25,7 +23,6 @@ class ResButton(ToolButton):
 
     def reset(self):
         return [self.w, self.h]
-
 
 class ARButton(ToolButton):
     def __init__(self, ar=1.0, **kwargs):
@@ -62,12 +59,11 @@ class ARButton(ToolButton):
     def reset(self, w, h):
         return [self.res, self.res]
 
-
-def parse_file(filename, parse_function):
+def parse_aspect_ratios_file(filename):
     labels, values, comments = [], [], []
     file = Path(BASE_PATH, filename)
 
-    if not file.exists():
+    if not file exists():
         return labels, values, comments
 
     with open(file, "r", encoding="utf-8") as f:
@@ -80,27 +76,86 @@ def parse_file(filename, parse_function):
         if line.startswith("#"):
             continue
 
-        parts = line.strip().split("#")
-        label, value = parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
-
-        # Split the label by comma and slash, then convert to float if possible
-        numeric_parts = re.split(r'[,:/]', label)
-        try:
-            numeric_value = parse_function(float(numeric_parts[0]) / float(numeric_parts[1]))
-        except (ValueError, IndexError, ZeroDivisionError):
-            numeric_value = 0.0
+        label, value = line.strip().split(",")
+        comment = ""
+        if "#" in value:
+            value, comment = value.split("#")
 
         labels.append(label)
-        values.append(numeric_value)
-        comments.append(value)
+        values.append(eval(value))
+        comments.append(comment)
 
     return labels, values, comments
 
+def parse_resolutions_file(filename):
+    labels, values, comments = [], [], []
+    file = Path(BASE_PATH, filename)
 
-def write_file(filename, data):
+    if not file exists():
+        return labels, values, comments
+
+    with open(file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    if not lines:
+        return labels, values, comments
+
+    for line in lines:
+        if line.startswith("#"):
+            continue
+
+        label, width, height = line.strip().split(",")
+        comment = ""
+        if "#" in height:
+            height, comment = height.split("#")
+
+        resolution = (width, height)
+
+        labels.append(label)
+        values.append(resolution)
+        comments.append(comment)
+
+    return labels, values, comments
+
+# TODO: write a generic function handling both cases
+def write_aspect_ratios_file(filename):
+    aspect_ratios = [
+        "3:2, 3/2      # Photography\n",
+        "4:3, 4/3      # Television photography\n",
+        "16:9, 16/9    # Television photography\n",
+        "1.85:1, 1.85  # Cinematography\n",
+        "2.39:1, 2.39  # Cinematography",
+    ]
     with open(filename, "w", encoding="utf-8") as f:
-        f.writelines(data)
+        f.writelines(aspect_ratios)
 
+def write_resolutions_file(filename):
+    resolutions = [
+        "512, 512, 512     # 512x512\n",
+        "640, 640, 640     # 640x640\n",
+        "768, 768, 768     # 768x768\n",
+        "896, 896, 896     # 896x896\n",
+        "1024, 1024, 1024  # 1024x1024",
+    ]
+    with open(filename, "w", encoding="utf-8") as f:
+        f.writelines(resolutions)
+
+def write_js_titles_file(button_titles):
+    filename = Path(BASE_PATH, "javascript", "button_titles.js")
+    content = [
+        "// Do not put custom titles here. This file is overwritten each time"
+    ]
+    content.append("arsp__ar_button_titles = {")
+    counter = 0
+    while counter < len(button_titles[0]):
+        content.append(
+            f'    "{button_titles[0][counter]}" : "{button_titles[1][counter]}",'
+        )
+        counter = counter + 1
+    content.append("}")
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.writelines(content)
 
 def get_reduced_ratio(n, d):
     n, d = list(map(int, (n, d)))
@@ -122,91 +177,43 @@ def get_reduced_ratio(n, d):
 
     return f"{w}:{h}"
 
-
 def solve_aspect_ratio(w, h, n, d):
-    if w:
+    if w != 0 and w:
         return round(w / (n / d))
-    elif h:
+    elif h != 0 and h:
         return round(h * (n / d))
     else:
         return 0
 
-
 class AspectRatioScript(scripts.Script):
-    def __init__(self):
-        super().__init__()
-        self.aspect_ratio_labels = []
-        self.aspect_ratios = []
-        self.aspect_ratio_comments = []
-        self.res_labels = []
-        self.res = []
-        self.res_comments = []
-
-    def title(self):
-        return "Aspect Ratio Calculator"
-        
     def read_aspect_ratios(self):
         ar_file = Path(BASE_PATH, "aspect_ratios.txt")
         if not ar_file.exists():
-            self.write_aspect_ratios_file(ar_file)
+            write_aspect_ratios_file(ar_file)
 
         (
             self.aspect_ratio_labels,
             aspect_ratios,
             self.aspect_ratio_comments,
-        ) = parse_file("aspect_ratios.txt", float)
-        self.aspect_ratios = aspect_ratios
+        ) = parse_aspect_ratios_file("aspect_ratios.txt")
+        self.aspect_ratios = list(map(float, aspect_ratios))
 
-# TODO: check for duplicates
-# TODO: check for invalid values
-# TODO: use comments as tooltips
+        # TODO: check for duplicates
 
-def read_resolutions(self):
-    res_file = Path(BASE_PATH, "resolutions.txt")
-    if not res_file.exists():
-        self.write_resolutions_file(res_file)
+        # TODO: check for invalid values
 
-    self.res_labels, res, self.res_comments = parse_file(
-        "resolutions.txt", lambda x: list(map(int, x.split(',')))
-    )
-    self.res = res
+        # TODO: use comments as tooltips
+        # see https://github.com/alemelis/sd-webui-ar/issues/5
 
-def write_aspect_ratios_file(self, filename):
-    aspect_ratios = [
-        "3:2, 3/2      # Photography\n",
-        "4:3, 4/3      # Television photography\n",
-        "16:9, 16/9    # Television photography\n",
-        "1.85:1, 1.85  # Cinematography\n",
-        "2.39:1, 2.39  # Cinematography",
-    ]
-    write_file(filename, aspect_ratios)
+        def read_resolutions(self):
+        res_file = Path(BASE_PATH, "resolutions.txt")
+        if not res_file.exists():
+            write_resolutions_file(res_file)
 
-    def write_resolutions_file(self, filename):
-        resolutions = [
-            "512, 512, 512     # 512x512\n",
-            "640, 640, 640     # 640x640\n",
-            "768, 768, 768     # 768x768\n",
-            "896, 896, 896     # 896x896\n",
-            "1024, 1024, 1024  # 1024x1024",
-        ]
-        write_file(filename, resolutions)
-
-    def write_js_titles_file(self, button_titles):
-        filename = Path(BASE_PATH, "javascript", "button_titles.js")
-        content = [
-            "// Do not put custom titles here. This file is overwritten each time the WebUI is started.\n"
-        ]
-        content.append("arsp__ar_button_titles = {\n")
-        counter = 0
-        while counter < len(button_titles[0]):
-            content.append(
-                f'    "{button_titles[0][counter]}" : "{button_titles[1][counter]}",\n'
-            )
-            counter = counter + 1
-        content.append("}")
-
-        with open(filename, "w", encoding="utf-8") as f:
-            f.writelines(content)
+        self.res_labels, res, self.res_comments = parse_resolutions_file(
+            "resolutions.txt"
+        )
+        self.res = [list(map(int, r)) for r in res]
 
     def title(self):
         return "Aspect Ratio picker"
@@ -294,7 +301,7 @@ def write_aspect_ratios_file(self, filename):
             # Write button_titles.js with labels and comments read from aspect ratios and resolutions files
             button_titles = [self.aspect_ratio_labels + self.res_labels]
             button_titles.append(self.aspect_ratio_comments + self.res_comments)
-            self.write_js_titles_file(button_titles)
+            write_js_titles_file(button_titles)
 
             # dummy components needed for JS function
             dummy_text1 = gr.Text(visible=False)
@@ -411,318 +418,232 @@ def write_aspect_ratios_file(self, filename):
 
                     # Update aspect ratio display on change
                     arc_width1.change(
-                        lambda w, h: (f"Aspect Ratio: **{get_reduced_ratio(w,h)}**"),
-                        inputs=[arc_width1, arc_height1],
-                        outputs=[arc_ar_display],
-                    )
-                    arc_height1.change(
-                        lambda w, h: (f"Aspect Ratio: **{get_reduced_ratio(w,h)}**"),
-                        inputs=[arc_width1, arc_height1],
-                        outputs=[arc_ar_display],
-                    )
-
-                with gr.Row():
-                    # Calculate and Apply buttons
-                    arc_calc_height = gr.Button(value="Calculate Height").style(
-                        full_width=False
-                    )
-                    arc_calc_height.click(
-                        lambda w, h: solve_aspect_ratio(w, h, arc_desired_width, arc_desired_height),
-                        inputs=[arc_width1, arc_height1, arc_desired_width, arc_desired_height],
-                        outputs=[arc_desired_height],
-                    )
-
-                    arc_apply = gr.Button(value="Apply").style(full_width=False)
-                    arc_apply.click(
-                        lambda w, h: solve_aspect_ratio(w, h, arc_width1, arc_height1),
-                        inputs=[arc_width1, arc_height1, arc_width1, arc_height1],
-                        outputs=[arc_desired_width, arc_desired_height],
-                    )
-
-                with gr.Row():
-                    # Aspect Ratio options
-                    arc_option_button = gr.Button(value="Aspect Ratio Options").style(
-                        full_width=False
-                    )
-                    arc_options = gr.MultiCheckbox(
-                        ["3:2", "4:3", "16:9", "1.85:1", "2.39:1"],
-                        elem_id="arsp__arc_options",
-                    )
-                    arc_option_button.click(
-                        arc_options.toggle_display, inputs=[arc_options]
-                    )
-
-                with gr.Row():
-                    # Save custom aspect ratio button
-                    arc_custom_save = gr.Button(value="Save Custom AR").style(
-                        full_width=False
-                    )
-                    arc_custom_save.click(
-                        lambda value, elem_id, ars: self.save_custom_aspect_ratio(
-                            value, elem_id, ars
-                        ),
+                        lambda w, h, w2, h2: (round(solve_aspect_ratio(w, h, w2, h2), 2)),
                         inputs=[
-                            arc_options.value,
-                            arc_options.elem_id,
-                            arc_options.choices,
+                            arc_width1,
+                            arc_height1,
+                            arc_desired_width,
+                            arc_desired_height,
                         ],
+                        outputs=[arc_ar_display],
+                    )
+
+                    arc_height1.change(
+                        lambda w, h, w2, h2: (round(solve_aspect_ratio(w, h, w2, h2), 2)),
+                        inputs=[
+                            arc_width1,
+                            arc_height1,
+                            arc_desired_width,
+                            arc_desired_height,
+                        ],
+                        outputs=[arc_ar_display],
+                    )
+
+                    arc_desired_width.change(
+                        lambda w, h, w2, h2: (round(solve_aspect_ratio(w, h, w2, h2), 2)),
+                        inputs=[
+                            arc_width1,
+                            arc_height1,
+                            arc_desired_width,
+                            arc_desired_height,
+                        ],
+                        outputs=[arc_ar_display],
+                    )
+
+                    arc_desired_height.change(
+                        lambda w, h, w2, h2: (round(solve_aspect_ratio(w, h, w2, h2), 2)),
+                        inputs=[
+                            arc_width1,
+                            arc_height1,
+                            arc_desired_width,
+                            arc_desired_height,
+                        ],
+                        outputs=[arc_ar_display],
                     )
 
                 with gr.Row():
-                    # View saved aspect ratios button
-                    arc_view_saved = gr.Button(value="View Saved ARs").style(
-                        full_width=False
-                    )
-                    arc_view_saved.click(self.view_saved_aspect_ratios)
+                    with gr.Column(min_width=150):
+                        arc_round_button = ToolButton(
+                            value=ROUND_SYMBOL,
+                            visible=False,
+                            elem_id="arsp__arc_round_button",
+                        )
 
-                with gr.Row():
-                    # Delete custom aspect ratio button
-                    arc_delete_custom = gr.Button(value="Delete Custom AR").style(
-                        full_width=False
-                    )
-                    arc_delete_custom.click(
-                        self.delete_custom_aspect_ratio, inputs=[arc_options]
-                    )
+                    with gr.Column(min_width=150):
+                        arc_get_img_res_button = ToolButton(
+                            value=IMAGE_DIMENSIONS_SYMBOL,
+                            elem_id="arsp__arc_get_img_res_button",
+                        )
+                        arc_get_img_res_button.click(
+                            fn=get_dims,
+                            inputs=self.image,
+                            outputs=[arc_desired_width, arc_desired_height],
+                            _js=current_tab_image,
+                        )
 
+                    # Create rounded aspect ratio button
+                    with contextlib.suppress(AttributeError):
+                        if is_img2img:
+                            resolution = [self.i2i_w, self.i2i_h]
+                            arc_round_button.click(
+                                fn=ARButton(
+                                    ar=arc_ar_display.value,
+                                    value=arc_ar_display.value,
+                                ).apply,
+                                inputs=resolution,
+                                outputs=resolution,
+                            )
+                        else:
+                            resolution = [self.t2i_w, self.t2i_h]
+                            arc_round_button.click(
+                                fn=ARButton(
+                                    ar=arc_ar_display.value,
+                                    value=arc_ar_display.value,
+                                ).apply,
+                                inputs=resolution,
+                                outputs=resolution,
+                            )
+
+            with gr.Row(
+                elem_id=f'arsp__{"img" if is_img2img else "txt"}2img_row_res_buttons'
+            ):
+                with contextlib.suppress(AttributeError):
+                    if is_img2img:
+                        resolution = [self.i2i_w, self.i2i_h]
+                    else:
+                        resolution = [self.t2i_w, self.t2i_h]
+
+                    with gr.Column():
+                        arc_show_resolution_buttons = ToolButton(
+                            value=IMAGE_DIMENSIONS_SYMBOL,
+                            visible=True,
+                            variant="secondary",
+                            elem_id="arsp__arc_show_resolution_buttons_button",
+                        )
+
+                        arc_hide_resolution_buttons = ToolButton(
+                            value=IMAGE_DIMENSIONS_SYMBOL,
+                            visible=False,
+                            variant="primary",
+                            elem_id="arsp__arc_hide_resolution_buttons_button",
+                        )
+
+                        arc_show_resolution_buttons.click(
+                            lambda res, w, h: (res, w, h),
+                            inputs=resolution,
+                            outputs=[
+                                arc_desired_width,
+                                arc_desired_height,
+                            ],
+                        )
+
+                        arc_hide_resolution_buttons.click(
+                            lambda res, w, h: (res, w, h),
+                            inputs=resolution,
+                            outputs=[
+                                arc_desired_width,
+                                arc_desired_height,
+                            ],
+                        )
+
+                        with gr.Row(
+                elem_id=f'arsp__{"img" if is_img2img else "txt"}2img_row_res_tool_buttons'
+            ):
+                with contextlib.suppress(AttributeError):
+                    if is_img2img:
+                        resolution = [self.i2i_w, self.i2i_h]
+                    else:
+                        resolution = [self.t2i_w, self.t2i_h]
+
+                    arc_resolution_tool_buttons = [
+                        ToolButton(value=IMAGE_DIMENSIONS_SYMBOL)
+                    ]
+                    for arc_resolution_tool_button in arc_resolution_tool_buttons:
+                        arc_resolution_tool_button.click(
+                            lambda res, w, h: (res, w, h),
+                            inputs=resolution,
+                            outputs=[
+                                arc_desired_width,
+                                arc_desired_height,
+                            ],
+                        )
+
+            # Show calculator pane (and reset number input values)
             arc_show_calculator.click(
-                arc_panel.toggle_display, inputs=[arc_panel]
+                lambda: [
+                    gr.update(visible=True),
+                    gr.update(visible=False),
+                    gr.update(visible=True),
+                    gr.update(value=512),
+                    gr.update(value=512),
+                    gr.update(value=0),
+                    gr.update(value=0),
+                    gr.update(value="Aspect Ratio: **1:1**"),
+                ],
+                None,
+                [
+                    arc_panel,
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_width1,
+                    arc_height1,
+                    arc_desired_width,
+                    arc_desired_height,
+                    arc_ar_display,
+                    arc_round_button,
+                    arc_get_img_res_button,
+                ],
             )
+            # Hide calculator pane
             arc_hide_calculator.click(
-                arc_panel.toggle_display, inputs=[arc_panel]
+                lambda: [
+                    gr.update(visible=False),
+                    gr.update(visible=True),
+                    gr.update(visible=False),
+                ],
+                None,
+                [
+                    arc_panel,
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                ],
             )
 
             arc_show_logic.click(
-                self.toggle_reverse_logic,
-                inputs=[
-                    arc_hide_logic,
-                    arc_show_logic,
-                    arc_swap,
-                    arc_get_image_dim,
-                    arc_get_img2img_dim,
-                    arc_get_txt2img_dim,
-                    arc_round,
-                    arc_show_calculator,
-                    arc_hide_calculator,
-                ],
-                outputs=[
-                    arc_hide_logic,
-                    arc_show_logic,
-                    arc_swap,
-                    arc_get_image_dim,
-                    arc_get_img2img_dim,
-                    arc_get_txt2img_dim,
-                    arc_round,
-                    arc_show_calculator,
-                    arc_hide_calculator,
-                ],
+                _arc_show_logic_update,
+                None,
+                [arc_show_logic, arc_hide_logic],
             )
             arc_hide_logic.click(
-                self.toggle_reverse_logic,
-                inputs=[
-                    arc_hide_logic,
-                    arc_show_logic,
-                    arc_swap,
-                    arc_get_image_dim,
-                    arc_get_img2img_dim,
-                    arc_get_txt2img_dim,
-                    arc_round,
-                    arc_show_calculator,
-                    arc_hide_calculator,
-                ],
-                outputs=[
-                    arc_hide_logic,
-                    arc_show_logic,
-                    arc_swap,
-                    arc_get_image_dim,
-                    arc_get_img2img_dim,
-                    arc_get_txt2img_dim,
-                    arc_round,
-                    arc_show_calculator,
-                    arc_hide_calculator,
-                ],
+                _arc_hide_logic_update,
+                None,
+                [arc_show_logic, arc_hide_logic],
             )
 
-            arc_round.click(
-                self.toggle_rounding,
-                inputs=[
-                    arc_round,
-                ],
-                outputs=[
-                    arc_round,
-                ],
-            )
 
-            return [
-                arc_show_logic,
-                arc_hide_logic,
-                arc_show_calculator,
-                arc_hide_calculator,
-                arc_swap,
-                arc_width1,
-                arc_height1,
-                arc_desired_width,
-                arc_desired_height,
-                arc_ar_display,
-                arc_calc_height,
-                arc_apply,
-                arc_option_button,
-                arc_options,
-                arc_custom_save,
-                arc_view_saved,
-                arc_delete_custom,
-                arc_panel,
-                arc_round,
-                arc_get_img2img_dim,
-                arc_get_txt2img_dim,
-                arc_get_image_dim,
-            ]
+    # https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/7456#issuecomment-1414465888
+    def after_component(self, component, **kwargs):
+        if kwargs.get("elem_id") == "txt2img_width":
+            self.t2i_w = component
+        if kwargs.get("elem_id") == "txt2img_height":
+            self.t2i_h = component
 
-    def save_custom_aspect_ratio(self, value, elem_id, ars):
-        if value and elem_id and ars:
-            aspect_ratios = []
-            labels = []
-            aspect_ratios, labels, _ = parse_file("aspect_ratios.txt", float)
+        if kwargs.get("elem_id") == "img2img_width":
+            self.i2i_w = component
+        if kwargs.get("elem_id") == "img2img_height":
+            self.i2i_h = component
 
-            if labels:
-                if elem_id in labels:
-                    index = labels.index(elem_id)
-                    aspect_ratios[index] = value
-                else:
-                    aspect_ratios.append(value)
-                    labels.append(elem_id)
+        if kwargs.get("elem_id") == "img2img_image":
+            self.image = [component]
+        if kwargs.get("elem_id") == "img2img_sketch":
+            self.image.append(component)
+        if kwargs.get("elem_id") == "img2maskimg":
+            self.image.append(component)
+        if kwargs.get("elem_id") == "inpaint_sketch":
+            self.image.append(component)
+        if kwargs.get("elem_id") == "img_inpaint_base":
+            self.image.append(component)
 
-            with open(
-                Path(BASE_PATH, "aspect_ratios.txt"), "w", encoding="utf-8"
-            ) as f:
-                for ar, label in zip(aspect_ratios, labels):
-                    f.write(f"{label},{ar}\n")
 
-    def delete_custom_aspect_ratio(self, selected_options):
-        options = selected_options.value
-        labels, ars, _ = parse_file("aspect_ratios.txt", float)
-
-        for option in options:
-            if option in labels:
-                index = labels.index(option)
-                del labels[index]
-                del ars[index]
-
-        with open(Path(BASE_PATH, "aspect_ratios.txt"), "w", encoding="utf-8") as f:
-            for label, ar in zip(labels, ars):
-                f.write(f"{label},{ar}\n")
-
-    def toggle_rounding(self, arc_round):
-        global IMAGE_ROUNDING_MULTIPLIER
-        if IMAGE_ROUNDING_MULTIPLIER == 1:
-            IMAGE_ROUNDING_MULTIPLIER = 4
-        else:
-            IMAGE_ROUNDING_MULTIPLIER = 1
-        arc_round.value = f"🔍 {IMAGE_ROUNDING_MULTIPLIER}x"
-
-    def toggle_reverse_logic(self, *args):
-        global is_reverse_logic_mode
-        is_reverse_logic_mode = not is_reverse_logic_mode
-        if is_reverse_logic_mode:
-            args[0].visible = False
-            args[1].visible = True
-        else:
-            args[0].visible = True
-            args[1].visible = False
-
-    def view_saved_aspect_ratios(self):
-        content = Path(BASE_PATH, "aspect_ratios.txt").read_text(
-            encoding="utf-8"
-        )
-
-        gr.interface.Interface(
-            gr.Row(
-                gr.Markdown(value="#### Saved Aspect Ratios"),
-                gr.Textbox(
-                    value=content,
-                    elem_id="arsp__aspect_ratios_content_text",
-                ),
-            ),
-            live=True,
-        )
-
-    def get_reduced_ratio(self, n, d):
-        return get_reduced_ratio(n, d)
-
-    def show_ar_input(self):
-        if is_reverse_logic_mode:
-            return gr.Row(
-                gr.Text("AR:"),
-                gr.TextInput(
-                    placeholder="Aspect Ratio",
-                    elem_id="arsp__arc_ar_input",
-                    style="box-sizing: border-box; padding: 10px; width: 100%;"
-                )
-            )
-        return []
-
-    def pre_image(self, *, batch, module, **kwargs):
-        self.read_aspect_ratios()
-        self.read_resolutions()
-
-    def load_defaults(self, *, batch, module, **kwargs):
-        self.read_aspect_ratios()
-        self.read_resolutions()
-        for i in range(8):
-            kwargs["image" + str(i)] = None
-
-        if "txt2txt_image" in kwargs:
-            kwargs["txt2txt_image"] = None
-        if "img2img_inpaint_image" in kwargs:
-            kwargs["img2img_inpaint_image"] = None
-
-    def load_image(self, *, batch, module, **kwargs):
-        self.read_aspect_ratios()
-        self.read_resolutions()
-
-    def get_panel_container(self, module):
-        return module["panel_arcs"]
-
-    def compute_aspect_ratio(self, aspect_ratio, width, height):
-        aspect_ratio = self.aspect_ratios[aspect_ratio]
-
-        if aspect_ratio > 1.0:
-            height = width / aspect_ratio
-        elif aspect_ratio < 1.0:
-            width = height * aspect_ratio
-        else:
-            new_value = min([width, height])
-            width, height = new_value, new_value
-
-        return width, height
-
-    def image2image(self, *, i2i_w, i2i_h, **kwargs):
-        # check AR aspect_ratio
-        ar = kwargs.get("ar")
-        if ar is not None:
-            i2i_w, i2i_h = self.compute_aspect_ratio(ar, i2i_w, i2i_h)
-
-        return i2i_w, i2i_h
-
-    def image2text(self, *, i2t_w, i2t_h, **kwargs):
-        # check AR aspect_ratio
-        ar = kwargs.get("ar")
-        if ar is not None:
-            i2t_w, i2t_h = self.compute_aspect_ratio(ar, i2t_w, i2t_h)
-
-        return i2t_w, i2t_h
-
-    def text2image(self, *, t2i_w, t2i_h, **kwargs):
-        # check AR aspect_ratio
-        ar = kwargs.get("ar")
-        if ar is not None:
-            t2i_w, t2i_h = self.compute_aspect_ratio(ar, t2i_w, t2i_h)
-
-        return t2i_w, t2i_h
-
-    def text2text(self, *, t2t_w, t2t_h, **kwargs):
-        # check AR aspect_ratio
-        ar = kwargs.get("ar")
-        if ar is not None:
-            t2t_w, t2t_h = self.compute_aspect_ratio(ar, t2t_w, t2t_h)
-
-        return t2t_w, t2t_h
+def round_to_multiple(x, multiple):
+    return multiple * round(x / multiple)
