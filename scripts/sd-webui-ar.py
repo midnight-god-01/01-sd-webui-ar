@@ -5,7 +5,7 @@ import modules.scripts as scripts
 from modules.ui_components import ToolButton
 from math import gcd
 
-aspect_ratios_dir = scripts.basedir()
+aspect_ratios_dir =  scripts.basedir()
 get_calculator_symbol = "\U0001F4D0" # 📐
 switch_values_symbol = "\U000021C5" # ⇅
 get_dimensions_symbol = "\u2B07\ufe0f" # ⬇️
@@ -14,7 +14,7 @@ get_reverse_logic_symbol = "\U0001F503" # 🔃
 get_round_symbol = "\U0001F50D" # 🔍
 IMAGE_ROUNDING_MULTIPLIER = 4
 
-class ResButton(ToolButton):
+class ResButton(gr.Button):
     def __init__(self, res=(512, 512), **kwargs):
         super().__init__(**kwargs)
         self.w, self.h = res
@@ -22,7 +22,7 @@ class ResButton(ToolButton):
     def reset(self):
         return [self.w, self.h]
 
-class ARButton(ToolButton):
+class ARButton(gr.Button):
     def __init__(self, ar=1.0, **kwargs):
         super().__init__(**kwargs)
         self.ar = ar
@@ -112,7 +112,6 @@ def parse_resolutions_file(filename):
 
     return labels, values, comments
 
-# TODO: write a generic function handling both cases
 def write_aspect_ratios_file(filename):
     aspect_ratios = [
         "1:1, 1.0 # 1:1 ratio based on minimum dimension\n",
@@ -131,23 +130,6 @@ def write_resolutions_file(filename):
     ]
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(resolutions)
-
-def write_js_titles_file(button_titles):
-    filename = Path(aspect_ratios_dir, "javascript", "button_titles.js")
-    content = [
-        "// Do not put custom titles here. This file is overwritten each time the WebUI is started.\n"
-    ]
-    content.append("ar_button_titles = {\n")
-    counter = 0
-    while counter < len(button_titles[0]):
-        content.append(
-            f'    "{button_titles[0][counter]}" : "{button_titles[1][counter]}",\n'
-        )
-        counter = counter + 1
-    content.append("}")
-
-    with open(filename, "w", encoding="utf-8") as f:
-        f.writelines(content)
 
 def get_reduced_ratio(n, d):
     n, d = list(map(int, (n, d)))
@@ -177,7 +159,22 @@ def solve_aspect_ratio(w, h, n, d):
     else:
         return 0
 
-class AspectRatioScript(scripts.Script):
+class AspectRatioScript:
+    def __init__(self):
+        self.aspect_ratio_labels = []
+        self.aspect_ratios = []
+        self.aspect_ratio_comments = []
+
+        self.res_labels = []
+        self.res = []
+        self.res_comments = []
+
+        self.t2i_w = None
+        self.t2i_h = None
+        self.i2i_w = None
+        self.i2i_h = None
+        self.image = None
+
     def read_aspect_ratios(self):
         ar_file = Path(aspect_ratios_dir, "aspect_ratios.txt")
         if not ar_file.exists():
@@ -189,13 +186,6 @@ class AspectRatioScript(scripts.Script):
             self.aspect_ratio_comments,
         ) = parse_aspect_ratios_file("aspect_ratios.txt")
         self.aspect_ratios = list(map(float, aspect_ratios))
-
-        # TODO: check for duplicates
-
-        # TODO: check for invalid values
-
-        # TODO: use comments as tooltips
-        # see https://github.com/alemelis/sd-webui-ar/issues/5
 
     def read_resolutions(self):
         res_file = Path(aspect_ratios_dir, "resolutions.txt")
@@ -313,7 +303,7 @@ class AspectRatioScript(scripts.Script):
                             elem_id=f'{"img" if is_img2img else "txt"}2img_arc_tool_buttons'
                         ):
                             # Switch resolution values button
-                            arc_swap = ToolButton(value=switch_values_symbol)
+                            arc_swap = ResButton(value=switch_values_symbol)
                             arc_swap.click(
                                 lambda w, h, w2, h2: (h, w, h2, w2),
                                 inputs=[
@@ -335,7 +325,7 @@ class AspectRatioScript(scripts.Script):
                                 if is_img2img:
                                     # Get slider dimensions button
                                     resolution = [self.i2i_w, self.i2i_h]
-                                    arc_get_img2img_dim = ToolButton(
+                                    arc_get_img2img_dim = ResButton(
                                         value=get_dimensions_symbol
                                     )
                                     arc_get_img2img_dim.click(
@@ -378,7 +368,7 @@ class AspectRatioScript(scripts.Script):
                                             return 0, 0
 
                                     # Get image dimensions button
-                                    arc_get_image_dim = ToolButton(
+                                    arc_get_image_dim = ResButton(
                                         value=get_image_dimensions_symbol
                                     )
                                     arc_get_image_dim.click(
@@ -392,7 +382,7 @@ class AspectRatioScript(scripts.Script):
                                     # For txt2img tab
                                     # Get slider dimensions button
                                     resolution = [self.t2i_w, self.t2i_h]
-                                    arc_get_txt2img_dim = ToolButton(
+                                    arc_get_txt2img_dim = ResButton(
                                         value=get_dimensions_symbol
                                     )
                                     arc_get_txt2img_dim.click(
@@ -437,65 +427,614 @@ class AspectRatioScript(scripts.Script):
                             resolution = [self.t2i_w, self.t2i_h]
 
                         arc_apply_params.click(
-                            lambda w2, h2: (w2, h2),
-                            inputs=[arc_desired_width, arc_desired_height],
+                            arc_apply_params.click,
+                            inputs=[
+                                arc_width1,
+                                arc_height1,
+                                arc_desired_width,
+                                arc_desired_height,
+                            ],
                             outputs=resolution,
                         )
 
-            # Show calculator pane (and reset number input values)
-            arc_show_calculator.click(
-                lambda: [
-                    gr.update(visible=True),
-                    gr.update(visible=False),
-                    gr.update(visible=True),
-                    gr.update(value=512),
-                    gr.update(value=512),
-                    gr.update(value=0),
-                    gr.update(value=0),
-                    gr.update(value="Aspect Ratio: **1:1**"),
-                ],
-                None,
-                [
-                    arc_panel,
+                    # Round calculations
+                    arc_round = gr.Button(value=get_round_symbol)
+                    arc_round.click(
+                        lambda w, h: [round(w), round(h)],
+                        inputs=[arc_desired_width, arc_desired_height],
+                        outputs=[arc_desired_width, arc_desired_height],
+                    )
+
+                with gr.Row():
+                    with gr.Column(min_width=150):
+                        arc_desired_width_label = gr.Text(
+                            value="Desired Width", visible=True
+                        )
+                        arc_desired_width_output = gr.Text(
+                            value="0", visible=True
+                        )
+
+                    with gr.Column(min_width=150):
+                        arc_desired_height_label = gr.Text(
+                            value="Desired Height", visible=True
+                        )
+                        arc_desired_height_output = gr.Text(
+                            value="0", visible=True
+                        )
+
+                with gr.Row():
+                    # Javascript function to select image element from current img2img tab
+                    current_tab_image = """
+                        function current_tab_image(...args) {
+                            const tab_index = get_img2img_tab_index();
+                            // Get current tab's image (on Batch tab, use image from img2img tab)
+                            if (tab_index == 5) {
+                                image = args[0];
+                            } else {
+                                image = args[tab_index];
+                            }
+                            // On Inpaint tab, select just the image and drop the mask
+                            if (tab_index == 2 && image !== null) {
+                                image = image["image"];
+                            }
+                            return [image, null, null, null, null];
+                        }
+                    """
+
+                    arc_get_image_dim = ResButton(value=get_image_dimensions_symbol)
+                    arc_get_image_dim.click(
+                        fn=get_dims,
+                        inputs=self.image,
+                        outputs=[
+                            arc_desired_width_output,
+                            arc_desired_height_output,
+                        ],
+                        _js=current_tab_image,
+                    )
+
+                    arc_get_calculator = gr.Button(value=get_calculator_symbol)
+                    arc_get_calculator.click(
+                        gr.disable,
+                        inputs=[arc_get_calculator],
+                        outputs=[arc_get_calculator],
+                    )
+
+                with gr.Row(
+                    elem_id=f'{"img" if is_img2img else "txt"}2img_arc_tool_buttons'
+                ):
+                    # Round calculation button
+                    arc_round = ResButton(value=get_round_symbol)
+                    arc_round.click(
+                        lambda w, h: [
+                            round(w / IMAGE_ROUNDING_MULTIPLIER)
+                            * IMAGE_ROUNDING_MULTIPLIER,
+                            round(h / IMAGE_ROUNDING_MULTIPLIER)
+                            * IMAGE_ROUNDING_MULTIPLIER,
+                        ],
+                        inputs=[
+                            arc_desired_width_output,
+                            arc_desired_height_output,
+                        ],
+                        outputs=[
+                            arc_desired_width_output,
+                            arc_desired_height_output,
+                        ],
+                    )
+
+                with gr.Row(
+                    elem_id=f'{"img" if is_img2img else "txt"}2img_arc_tool_buttons'
+                ):
+                    # Javascript function to select image element from current img2img tab
+                    current_tab_image = """
+                        function current_tab_image(...args) {
+                            const tab_index = get_img2img_tab_index();
+                            // Get current tab's image (on Batch tab, use image from img2img tab)
+                            if (tab_index == 5) {
+                                image = args[0];
+                            } else {
+                                image = args[tab_index];
+                            }
+                            // On Inpaint tab, select just the image and drop the mask
+                            if (tab_index == 2 && image !== null) {
+                                image = image["image"];
+                            }
+                            return [image, null, null, null, null];
+                        }
+                    """
+
+                    arc_get_img2img_dim = ResButton(
+                        value=get_dimensions_symbol
+                    )
+                    arc_get_img2img_dim.click(
+                        lambda w, h: [w, h],
+                        inputs=[arc_i2i_w, arc_i2i_h],
+                        outputs=[
+                            arc_i2i_w,
+                            arc_i2i_h,
+                        ],
+                        _js=current_tab_image,
+                    )
+
+                with gr.Row():
+                    # Javascript function to select image element from current img2img tab
+                    current_tab_image = """
+                        function current_tab_image(...args) {
+                            const tab_index = get_img2img_tab_index();
+                            // Get current tab's image (on Batch tab, use image from img2img tab)
+                            if (tab_index == 5) {
+                                image = args[0];
+                            } else {
+                                image = args[tab_index];
+                            }
+                            // On Inpaint tab, select just the image and drop the mask
+                            if (tab_index == 2 && image !== null) {
+                                image = image["image"];
+                            }
+                            return [image, null, null, null, null];
+                        }
+                    """
+
+                    arc_get_image_dim = ResButton(value=get_image_dimensions_symbol)
+                    arc_get_image_dim.click(
+                        fn=get_dims,
+                        inputs=self.image,
+                        outputs=[arc_i2i_w, arc_i2i_h],
+                        _js=current_tab_image,
+                    )
+
+                arc_show_calculator.click(
+                    gr.show,
+                    inputs=[
+                        arc_show_calculator,
+                        arc_hide_calculator,
+                        arc_panel,
+                        arc_get_calculator,
+                    ],
+                    outputs=[
+                        arc_show_calculator,
+                        arc_hide_calculator,
+                        arc_panel,
+                        arc_get_calculator,
+                    ],
+                )
+
+                arc_hide_calculator.click(
+                    gr.hide,
+                    inputs=[
+                        arc_show_calculator,
+                        arc_hide_calculator,
+                        arc_panel,
+                        arc_get_calculator,
+                    ],
+                    outputs=[
+                        arc_show_calculator,
+                        arc_hide_calculator,
+                        arc_panel,
+                        arc_get_calculator,
+                    ],
+                )
+
+                arc_calc_height.click(
+                    arc_calc_height.click,
+                    inputs=[
+                        arc_desired_height,
+                        arc_desired_width,
+                        arc_width1,
+                        arc_height1,
+                    ],
+                    outputs=[arc_desired_height, arc_desired_width],
+                )
+                arc_calc_width.click(
+                    arc_calc_width.click,
+                    inputs=[
+                        arc_desired_width,
+                        arc_desired_height,
+                        arc_width1,
+                        arc_height1,
+                    ],
+                    outputs=[arc_desired_width, arc_desired_height],
+                )
+
+                arc_panel.append(arc_title_heading)
+                arc_panel.append(arc_width1)
+                arc_panel.append(arc_height1)
+                arc_panel.append(arc_desired_width)
+                arc_panel.append(arc_desired_height)
+                arc_panel.append(arc_ar_display)
+                arc_panel.append(arc_swap)
+                arc_panel.append(arc_calc_height)
+                arc_panel.append(arc_calc_width)
+                arc_panel.append(arc_apply_params)
+                arc_panel.append(arc_round)
+                arc_panel.append(arc_get_img2img_dim)
+                arc_panel.append(arc_get_calculator)
+                arc_panel.append(arc_hide_calculator)
+                arc_panel.append(arc_show_calculator)
+                arc_panel.append(arc_get_image_dim)
+
+                arc_panel.append(dummy_text1)
+                arc_panel.append(dummy_text2)
+                arc_panel.append(dummy_text3)
+                arc_panel.append(dummy_text4)
+
+            with gr.Row(
+                elem_id=f'{"img" if is_img2img else "txt"}2img_row_buttons'
+            ):
+                with gr.Column(min_width=50):
+                    gr.Button(
+                        label="Reset",
+                        variant="primary",
+                        click=[
+                            arc_width1.reset,
+                            arc_height1.reset,
+                            arc_desired_width.reset,
+                            arc_desired_height.reset,
+                        ],
+                    )
+
+                    gr.Button(
+                        label="Clear",
+                        variant="danger",
+                        click=[
+                            arc_width1.clear,
+                            arc_height1.clear,
+                            arc_desired_width.clear,
+                            arc_desired_height.clear,
+                        ],
+                    )
+
+                    gr.Button(
+                        label="Undo",
+                        variant="warning",
+                        click=[
+                            arc_width1.undo,
+                            arc_height1.undo,
+                            arc_desired_width.undo,
+                            arc_desired_height.undo,
+                        ],
+                    )
+
+                with gr.Column(min_width=50):
+                    arc_calculator = gr.Button(
+                        label=get_calculator_symbol,
+                        variant="info",
+                        click=gr.toggle,
+                        elem_id="arc_show_calculator_button",
+                    )
+                    arc_calculator.click(
+                        gr.disable,
+                        inputs=[arc_calculator],
+                        outputs=[arc_calculator],
+                    )
+
+                    arc_img_tool = gr.Button(
+                        label=get_image_dimensions_symbol,
+                        variant="info",
+                        click=gr.toggle,
+                        elem_id="arc_show_calculator_button",
+                    )
+                    arc_img_tool.click(
+                        gr.disable,
+                        inputs=[arc_img_tool],
+                        outputs=[arc_img_tool],
+                    )
+
+            # Toggle calculator display button
+            arc_show_calculator = gr.Button(
+                value="Calc",
+                visible=True,
+                variant="secondary",
+                elem_id="arc_show_calculator_button",
+            )
+            arc_hide_calculator = gr.Button(
+                value="Calc",
+                visible=False,
+                variant="primary",
+                elem_id="arc_hide_calculator_button",
+            )
+            arc_hide_calculator.click(
+                gr.show,
+                inputs=[
                     arc_show_calculator,
                     arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+                outputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+            )
+
+            arc_show_calculator.click(
+                gr.hide,
+                inputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+                outputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+            )
+
+            # Update values from calculator
+            arc_desired_width.change(
+                lambda w: (arc_width1, w),
+                inputs=[arc_desired_width, arc_width1],
+                outputs=[arc_width1],
+            )
+
+            arc_desired_height.change(
+                lambda h: (arc_height1, h),
+                inputs=[arc_desired_height, arc_height1],
+                outputs=[arc_height1],
+            )
+
+            arc_apply_params.click(
+                gr.click,
+                inputs=[
                     arc_width1,
                     arc_height1,
                     arc_desired_width,
                     arc_desired_height,
-                    arc_ar_display,
+                ],
+                outputs=resolution,
+            )
+
+            # Update aspect ratio display on change
+            arc_width1.change(
+                lambda w, h: (f"Aspect Ratio: **{get_reduced_ratio(w,h)}**"),
+                inputs=[arc_width1, arc_height1],
+                outputs=[arc_ar_display],
+            )
+            arc_height1.change(
+                lambda w, h: (f"Aspect Ratio: **{get_reduced_ratio(w,h)}**"),
+                inputs=[arc_width1, arc_height1],
+                outputs=[arc_ar_display],
+            )
+
+            # Calculate and Apply buttons
+            arc_calc_height.click(
+                gr.click,
+                inputs=[
+                    arc_desired_height,
+                    arc_desired_width,
+                    arc_width1,
+                    arc_height1,
+                ],
+                outputs=[arc_desired_height, arc_desired_width],
+            )
+            arc_calc_width.click(
+                gr.click,
+                inputs=[
+                    arc_desired_width,
+                    arc_desired_height,
+                    arc_width1,
+                    arc_height1,
+                ],
+                outputs=[arc_desired_width, arc_desired_height],
+            )
+
+            arc_round.click(
+                gr.click,
+                inputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
+                ],
+                outputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
                 ],
             )
-            # Hide calculator pane
+
+            arc_get_calculator.click(
+                gr.disable,
+                inputs=[arc_get_calculator],
+                outputs=[arc_get_calculator],
+            )
+
+            arc_get_img_tool.click(
+                gr.disable,
+                inputs=[arc_get_img_tool],
+                outputs=[arc_get_img_tool],
+            )
+
+            arc_apply_params.click(
+                gr.click,
+                inputs=[
+                    arc_width1,
+                    arc_height1,
+                    arc_desired_width,
+                    arc_desired_height,
+                ],
+                outputs=resolution,
+            )
+
+            arc_round.click(
+                gr.click,
+                inputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
+                ],
+                outputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
+                ],
+            )
+
+            arc_get_calculator.click(
+                gr.disable,
+                inputs=[arc_get_calculator],
+                outputs=[arc_get_calculator],
+            )
+
+            arc_get_img_tool.click(
+                gr.disable,
+                inputs=[arc_get_img_tool],
+                outputs=[arc_get_img_tool],
+            )
+
+            arc_apply_params.click(
+                gr.click,
+                inputs=[
+                    arc_width1,
+                    arc_height1,
+                    arc_desired_width,
+                    arc_desired_height,
+                ],
+                outputs=resolution,
+            )
+
+            with gr.Row():
+                # Javascript function to select image element from current img2img tab
+                current_tab_image = """
+                    function current_tab_image(...args) {
+                        const tab_index = get_img2img_tab_index();
+                        // Get current tab's image (on Batch tab, use image from img2img tab)
+                        if (tab_index == 5) {
+                            image = args[0];
+                        } else {
+                            image = args[tab_index];
+                        }
+                        // On Inpaint tab, select just the image and drop the mask
+                        if (tab_index == 2 && image !== null) {
+                            image = image["image"];
+                        }
+                        return [image, null, null, null, null];
+                    }
+                """
+
+                arc_get_image_dim = ResButton(
+                    value=get_image_dimensions_symbol
+                )
+                arc_get_image_dim.click(
+                    fn=get_dims,
+                    inputs=self.image,
+                    outputs=[arc_i2i_w, arc_i2i_h],
+                    _js=current_tab_image,
+                )
+
+            arc_show_calculator.click(
+                gr.show,
+                inputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+                outputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
+            )
+
             arc_hide_calculator.click(
-                lambda: [
-                    gr.update(visible=False),
-                    gr.update(visible=True),
-                    gr.update(visible=False),
+                gr.hide,
+                inputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
                 ],
-                None,
-                [arc_panel, arc_show_calculator, arc_hide_calculator],
+                outputs=[
+                    arc_show_calculator,
+                    arc_hide_calculator,
+                    arc_panel,
+                    arc_get_calculator,
+                ],
             )
 
-    # https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/7456#issuecomment-1414465888
-    def after_component(self, component, **kwargs):
-        if kwargs.get("elem_id") == "txt2img_width":
-            self.t2i_w = component
-        if kwargs.get("elem_id") == "txt2img_height":
-            self.t2i_h = component
+            arc_calc_height.click(
+                gr.click,
+                inputs=[
+                    arc_desired_height,
+                    arc_desired_width,
+                    arc_width1,
+                    arc_height1,
+                ],
+                outputs=[arc_desired_height, arc_desired_width],
+            )
+            arc_calc_width.click(
+                gr.click,
+                inputs=[
+                    arc_desired_width,
+                    arc_desired_height,
+                    arc_width1,
+                    arc_height1,
+                ],
+                outputs=[arc_desired_width, arc_desired_height],
+            )
 
-        if kwargs.get("elem_id") == "img2img_width":
-            self.i2i_w = component
-        if kwargs.get("elem_id") == "img2img_height":
-            self.i2i_h = component
+            arc_round.click(
+                gr.click,
+                inputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
+                ],
+                outputs=[
+                    arc_desired_width_output,
+                    arc_desired_height_output,
+                ],
+            )
 
-        if kwargs.get("elem_id") == "img2img_image":
-            self.image = [component]
-        if kwargs.get("elem_id") == "img2img_sketch":
-            self.image.append(component)
-        if kwargs.get("elem_id") == "img2maskimg":
-            self.image.append(component)
-        if kwargs.get("elem_id") == "inpaint_sketch":
-            self.image.append(component)
-        if kwargs.get("elem_id") == "img_inpaint_base":
-            self.image.append(component)
+            arc_get_calculator.click(
+                gr.disable,
+                inputs=[arc_get_calculator],
+                outputs=[arc_get_calculator],
+            )
+
+            arc_get_img_tool.click(
+                gr.disable,
+                inputs=[arc_get_img_tool],
+                outputs=[arc_get_img_tool],
+            )
+
+    def on_input_change(self, params):
+        self.t2i_w, self.t2i_h, self.i2i_w, self.i2i_h, self.image = (
+            params["text2img_width"],
+            params["text2img_height"],
+            params["img2img_width"],
+            params["img2img_height"],
+            params["image"],
+        )
+
+    def on_init(self):
+        self.t2i_w, self.t2i_h, self.i2i_w, self.i2i_h, self.image = (
+            0,
+            0,
+            0,
+            0,
+            None,
+        )
+
+def write_js_titles_file(titles):
+    with open("button_titles.js", "w", encoding="utf-8") as f:
+        f.write("var button_titles = [")
+        f.write(
+            ",\n                ".join(
+                ['"' + '", "'.join([str(c).strip() for c in r]) + '"' for r in titles]
+            )
+        )
+        f.write("];")
+
+if __name__ == "__main__":
+    def custom_code_callback(params):
+        print(params)
+    gr.Interface(
+        custom_code_callback,
+        [
+            gr.Textbox("image_path", label="Image Path", default="image.jpg"),
+            gr.Textbox("prompt", label="Prompt", default="A beautiful sunset scene."),
+            gr.Button("Generate Image"),
+        ],
+        live=True,
+    ).launch()
