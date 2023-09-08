@@ -414,7 +414,7 @@ class AspectRatioScript(scripts.Script):
 
                 with gr.Row():
                     # Calculate and Apply buttons
-                    arc_calc_height = gr.Button(value="Calculate Height").style(
+                    arc_calc_height = gr.Button(value="Calculate Height", scale=0)
                         full_width=False
                     )
                     arc_calc_height.click(
@@ -422,7 +422,7 @@ class AspectRatioScript(scripts.Script):
                         inputs=[arc_desired_width, arc_width1, arc_height1],
                         outputs=[arc_desired_height],
                     )
-                    arc_calc_width = gr.Button(value="Calculate Width").style(
+                    arc_calc_width = gr.Button(value="Calculate Width", scale=0)
                         full_width=False
                     )
                     arc_calc_width.click(
