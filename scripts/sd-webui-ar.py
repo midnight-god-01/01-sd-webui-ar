@@ -496,29 +496,14 @@ class Titlebar(ToolButton):
         return self.value
 
 class AspectRatio(gr.Interface):
-    def __init__(self, AR_NAME, AR_CALCULATOR, AR_SWITCH_VALUES, AR_DIMENSIONS, AR_IMAGE_DIMENSIONS, AR_REVERSE_LOGIC, AR_ROUND, scripts):
-        super().__init__(
-            scripts,
-            [
-                gr.Input("Image", type="image", label="Image"),
-                gr.Input("Text to Image", type="image", label="Text to Image"),
-                gr.Input("Text", type="textbox", label="Text"),
-            ],
-            [
-                gr.Output("Image", type="image", label="Image"),
-                gr.Output("Text to Image", type="image", label="Text to Image"),
-                gr.Output("Text", type="textbox", label="Text"),
-            ],
-            layout="vertical",
-        )
-
-        self.AR_NAME = AR_NAME
-        self.AR_CALCULATOR = AR_CALCULATOR
-        self.AR_SWITCH_VALUES = AR_SWITCH_VALUES
-        self.AR_DIMENSIONS = AR_DIMENSIONS
-        self.AR_IMAGE_DIMENSIONS = AR_IMAGE_DIMENSIONS
-        self.AR_REVERSE_LOGIC = AR_REVERSE_LOGIC
-        self.AR_ROUND = AR_ROUND
+def __init__(self):
+    self.AR_NAME = "Aspect ratio picker"
+    self.AR_CALCULATOR = "Calculator"
+    self.AR_SWITCH_VALUES = "Switch values"
+    self.AR_DIMENSIONS = "Change dimensions"
+    self.AR_IMAGE_DIMENSIONS = "Use image dimensions"
+    self.AR_REVERSE_LOGIC = "Reverse logic"
+    self.AR_ROUND = "Round"
 
         self.add_titlebar()
         self.add_footer()
@@ -589,15 +574,7 @@ def no_stdout():
             yield
 
 
-aspect_ratio_script = AspectRatioScript(
-    AR_NAME="Aspect ratio picker",
-    AR_CALCULATOR="Calculator",
-    AR_SWITCH_VALUES="Switch values",
-    AR_DIMENSIONS="Change dimensions",
-    AR_IMAGE_DIMENSIONS="Use image dimensions",
-    AR_REVERSE_LOGIC="Reverse logic",
-    AR_ROUND="Round",
-)
+aspect_ratio_script = AspectRatioScript()
 aspect_ratio_script.display()
 
 if __name__ == "__main__":
