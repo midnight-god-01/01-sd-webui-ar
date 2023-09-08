@@ -1,63 +1,62 @@
-Your documentation is already quite informative, but here are some further improvements for clarity and readability:
+# Stable Diffusion WebUI Aspect Ratio Selector Extension
 
-# Stable Diffusion WebUI Aspect Ratio Selector
-
-An extension for [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui.git) that enhances the interface by introducing image aspect ratio selector buttons.
-
-## Fork Features
-
-This extension offers several enhancements:
-
-- New button `🔃` for calculating height and width inversely:
-  - Normal mode: `1024x1024 and 16:9 = 1820x1024`
-  - Reverse mode: `1024x1024 and 16:9 = 1024x576`
-- New button `🔍` for rounding dimensions to the nearest multiples of 4 (`1023x101` => `1024x100`)
-- New styles (Some styles have been moved to the original extension)
-- Improved resolution presets (Calculated by the formula: `f(x) = 512 + (1024-512)/4*x, 0 <= x <= 4`)
-- Enhanced ratios presets (Sourced from [Wikipedia](https://en.wikipedia.org/wiki/Aspect_ratio_(image)))
-- Renamed `Calc` button to `📐`
-- Compatible with the original extension
-
-![UI Screenshot](https://media.discordapp.net/attachments/1124020774055981108/1125719548587417630/image.png)
+Enhance your [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui.git) experience with the Aspect Ratio Selector extension.
 
 ## Updates
 
-- **20/02/2023** :warning: **Important Update**: This release will reset your local configuration files (`aspect_ratios.txt` and `resolutions.txt`) and create new default configurations. You can freely modify and preserve these settings in the future. For more information, please read [here](https://github.com/alemelis/sd-webui-ar/issues/9).
+- **20/02/2023** :warning: **Important Update**: This update will replace your local configuration files (`aspect_ratios.txt` and `resolutions.txt`) with new default ones. These can be easily customized and preserved for future use. For more details, please refer to [this link](https://github.com/alemelis/sd-webui-ar/issues/9).
 
 ## Installation
 
-To install this extension, follow these steps:
-
-1. Navigate to the `Extensions` tab within your Stable Diffusion WebUI.
+1. Navigate to the `Extensions` tab.
 2. Select `Install from URL`.
-3. Paste the following URL: `[https://github.com/alemelis/sd-webui-ar](https://github.com/midnight-god-01/sd-webui-ar.git)`.
-4. Click `Install`.
+3. Paste the following URL: `https://github.com/alemelis/sd-webui-ar`.
+4. Click on `Install`.
 
-Once installed, your user interface will resemble the following:
+Here's a glimpse of the user interface after installing this extension:
 
-![UI Screenshot](https://user-images.githubusercontent.com/4661737/228946744-dbffc4c6-8a3f-4a42-8e47-1056b3558afc.png)
+![Screenshot 2023-03-30 at 20 37 56](https://user-images.githubusercontent.com/4661737/228946744-dbffc4c6-8a3f-4a42-8e47-1056b3558afc.png)
 
 ## Usage
 
-Utilizing the aspect ratio selector is straightforward:
-
-1. Click on the desired aspect ratio button. If the aspect ratio is greater than 1, the script adjusts the width and maintains the height. If the aspect ratio is less than 1, the width changes while the height remains constant.
-2. To reset the image resolution, simply click one of the buttons on the second row.
+- Simply click on the aspect ratio button of your choice. If the aspect ratio is greater than 1, the script adjusts the width while keeping the height fixed. Conversely, if the aspect ratio is less than 1, it changes the height while keeping the width fixed.
+- You can reset the image resolution by clicking on one of the buttons in the second row.
 
 ### Configuration
 
-Aspect ratios can be defined in the `/sd-webui-ar/aspect_ratios.txt` file. For example:
+You can define aspect ratios in the `/sd-webui-ar/aspect_ratios.txt` file. For example:
 
 ```
 1:1, 1.0
 3:2, 3/2
 4:3, 4/3
 16:9, 16/9
+# 6:13, 6/13
+# 9:16, 9/16
+# 3:5, 3/5
+# 2:3, 2/3
+# 19:16, 19/16 # fox movietone
+# 5:4, 5/4 # medium format photo
+# 11:8, 11/8 # academy standard
+# IMAX, 1.43
+# 14:9, 14/9
+# 16:10, 16/10
+# 𝜑, 1.6180 # golden ratio
+# 5:3, 5/3 # super 16mm
+# 1.85, 1.85 # US widescreen cinema
+# DCI, 1.9 # digital imax
+# 2:1, 2.0 # univisium
+# 70mm, 2.2
+# 21:9, 21/9 # cinematic wide screen
+# δ, 2.414 # silver ratio
+# UPV70, 2.76 # ultra panavision 70
+# 32:9, 32/9 # ultra wide screen
+# PV, 4.0 # polyvision
 ```
 
-Lines starting with `#` are considered comments and are ignored by the extension. To use a custom value, uncomment the relevant line by removing the `#`. A custom aspect ratio is defined as `button-label, aspect-ratio-value # comment`. You can set the `aspect-ratio-value` as a fraction, float, or integer. The `# comment` is optional, and the `button-label` can be customized as desired.
+Lines starting with `#` are treated as comments and are not read by the extension. To use a custom value, simply uncomment the respective line by removing the `#` at the beginning. A custom aspect ratio is defined as `button-label, aspect-ratio-value # comment`. You can choose any label for the button. It's recommended to set the `aspect-ratio-value` as a fraction, but integers or floats work as well. The `# comment` is optional.
 
-Resolutions presets are configured in the `resolutions.txt` file:
+Resolution presets can be defined in the `resolutions.txt` file:
 
 ```
 1, 512, 512 # 1:1 square
@@ -65,18 +64,21 @@ Resolutions presets are configured in the `resolutions.txt` file:
 3, 403, 716 # 9:16 portrait 
 ```
 
-The format is `button-label, width, height, # optional comment`. Lines starting with `#` are ignored.
+Use the format `button-label, width, height, # optional comment`. Again, lines starting with `#` are ignored.
 
 ## Calculator Panel
 
-The calculator enables you to calculate new width or height values based on the aspect ratio of source dimensions. Here's a step-by-step guide:
+The calculator allows you to determine new width or height values based on the aspect ratio of source dimensions. Here's how it works:
 
-1. Click `📐` to reveal or hide the aspect ratio calculator.
-2. Set the source dimensions manually or use buttons to fetch them from sliders or an input image component.
-3. Click `🔃` to swap the width and height if needed.
-4. Specify the desired width or height and then click either `Calculate Height` or `Calculate Width` to compute the missing value.
-5. Click `Apply` to transmit the values to the txt2txt/img2img sliders.
+- Click `Calc` to show or hide the aspect ratio calculator.
+- Set the source dimensions:
+  - Enter them manually.
+  - Click ⬇️ to get source dimensions from txt2img/img2img sliders.
+  - Click 🖼️ to get source dimensions from the input image component on the current tab.
+- Click ⇅ to swap the width and height if needed.
+- Specify the desired width or height and click either `Calculate Height` or `Calculate Width` to compute the missing value.
+- Click `Apply` to transfer the values to the txt2txt/img2img sliders.
 
-![Calculator Usage](https://user-images.githubusercontent.com/121050401/229391634-4ec06027-e603-4672-bad9-ec77647b0941.gif)
+![Basic usage of the aspect ratio calculator](https://user-images.githubusercontent.com/121050401/229391634-4ec06027-e603-4672-bad9-ec77647b0941.gif)
 
-With these improvements, your documentation is more user-friendly and comprehensive.
+Enjoy the enhanced functionality of your Stable Diffusion WebUI with the Aspect Ratio Selector extension!
