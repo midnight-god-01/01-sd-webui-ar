@@ -10,7 +10,7 @@ Enhance your [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC
 
 1. Navigate to the `Extensions` tab.
 2. Select `Install from URL`.
-3. Paste the following URL: `https://github.com/alemelis/sd-webui-ar`.
+3. Paste the following URL: `(https://github.com/midnight-god-01/sd-webui-ar.git)`.
 4. Click on `Install`.
 
 Here's a glimpse of the user interface after installing this extension:
