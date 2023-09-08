@@ -52,7 +52,7 @@ def parse_aspect_ratios_file(filename):
     labels, values, comments = [], [], []
     file = Path(aspect_ratios_dir, filename)
 
-    if not file exists():
+    if not file.exists():
         return labels, values, comments
 
     with open(file, "r", encoding="utf-8") as f:
