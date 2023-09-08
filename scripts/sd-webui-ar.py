@@ -589,18 +589,16 @@ def no_stdout():
             yield
 
 
-scripts.register_script(
-    AspectRatioScript(
-        AR_NAME="Aspect ratio picker",
-        AR_CALCULATOR="Calculator",
-        AR_SWITCH_VALUES="Switch values",
-        AR_DIMENSIONS="Change dimensions",
-        AR_IMAGE_DIMENSIONS="Use image dimensions",
-        AR_REVERSE_LOGIC="Reverse logic",
-        AR_ROUND="Round",
-    )
+aspect_ratio_script = AspectRatioScript(
+    AR_NAME="Aspect ratio picker",
+    AR_CALCULATOR="Calculator",
+    AR_SWITCH_VALUES="Switch values",
+    AR_DIMENSIONS="Change dimensions",
+    AR_IMAGE_DIMENSIONS="Use image dimensions",
+    AR_REVERSE_LOGIC="Reverse logic",
+    AR_ROUND="Round",
 )
+aspect_ratio_script.display()
 
 if __name__ == "__main__":
-    scripts.read_scripts()
     gr.interface.Interface(run_multiple=True).launch()
