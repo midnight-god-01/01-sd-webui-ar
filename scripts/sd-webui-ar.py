@@ -14,13 +14,6 @@ IMAGE_DIMENSIONS_SYMBOL = "\U0001F5BC"  # 🖼
 REVERSE_LOGIC_SYMBOL = "\U0001F503"  # 🔃
 ROUND_SYMBOL = "\U0001F50D"  # 🔍
 
-aspect_ratios_dir = scripts.basedir()
-
-calculator_symbol = CALCULATOR_SYMBOL
-switch_values_symbol = SWITCH_VALUES_SYMBOL
-get_dimensions_symbol = DIMENSIONS_SYMBOL
-get_image_dimensions_symbol = IMAGE_DIMENSIONS_SYMBOL
-
 class ResButton(ToolButton):
     def __init__(self, res=(512, 512), **kwargs):
         super().__init__(**kwargs)
@@ -42,7 +35,6 @@ class ARButton(ToolButton):
         else:  # set minimum dimension to both
             min_dim = min([w, h])
             w, h = min_dim, min_dim
-
         return list(map(round, [w, h]))
 
     def reset(self, w, h):
@@ -50,7 +42,7 @@ class ARButton(ToolButton):
 
 def parse_aspect_ratios_file(filename):
     labels, values, comments = [], [], []
-    file = Path(aspect_ratios_dir, filename)
+    file = Path(BASE_PATH, filename)
 
     if not file.exists():
         return labels, values, comments
@@ -85,7 +77,7 @@ def parse_aspect_ratios_file(filename):
 
 def parse_resolutions_file(filename):
     labels, values, comments = [], [], []
-    file = Path(aspect_ratios_dir, filename)
+    file = Path(BASE_PATH, filename)
 
     if not file.exists():
         return labels, values, comments
@@ -140,7 +132,7 @@ def write_resolutions_file(filename):
         f.writelines(resolutions)
 
 def write_js_titles_file(button_titles):
-    filename = Path(aspect_ratios_dir, "javascript", "button_titles.js")
+    filename = Path(BASE_PATH, "javascript", "button_titles.js")
     content = [
         "// Do not put custom titles here. This file is overwritten each time the WebUI is started.\n"
     ]
@@ -186,7 +178,7 @@ def solve_aspect_ratio(w, h, n, d):
 
 class AspectRatioScript(scripts.Script):
     def read_aspect_ratios(self):
-        ar_file = Path(aspect_ratios_dir, "aspect_ratios.txt")
+        ar_file = Path(BASE_PATH, "aspect_ratios.txt")
         if not ar_file.exists():
             write_aspect_ratios_file(ar_file)
 
@@ -198,7 +190,7 @@ class AspectRatioScript(scripts.Script):
         self.aspect_ratios = list(map(float, aspect_ratios))
 
     def read_resolutions(self):
-        res_file = Path(aspect_ratios_dir, "resolutions.txt")
+        res_file = Path(BASE_PATH, "resolutions.txt")
         if not res_file.exists():
             write_resolutions_file(res_file)
 
@@ -217,246 +209,398 @@ class AspectRatioScript(scripts.Script):
         with gr.Column(
             elem_id=f'{"img" if is_img2img else "txt"}2img_container_aspect_ratio'
         ):
-            self.read_aspect_ratios()
-            with gr.Row(
-                elem_id=f'{"img" if is_img2img else "txt"}2img_row_aspect_ratio'
-            ):
-                gr.HTML(
-                    visible=True,
-                    elem_id="arc_empty_space",
-                )
+            self.aspect_ratios = list(map(float, self.aspect_ratios))
+            aspect_ratio_labels = self.aspect_ratio_labels
+            self.ar_button_titles = [
+                self.AR_NAME,
+                self.AR_CALCULATOR,
+                self.AR_SWITCH_VALUES,
+                self.AR_DIMENSIONS,
+                self.AR_IMAGE_DIMENSIONS,
+                self.AR_REVERSE_LOGIC,
+                self.AR_ROUND,
+            ]
+            aspect_ratio_labels.extend(self.ar_button_titles)
 
-                # Aspect Ratio buttons
-                btns = [
-                    ARButton(ar=ar, value=label)
-                    for ar, label in zip(
-                        self.aspect_ratios,
-                        self.aspect_ratio_labels,
-                    )
+            self.aspects, _ = gr.radio(
+                aspect_ratio_labels,
+                default=self.aspect_ratios[0],
+                label="Aspect ratio",
+                elem_id="aspect_ratio",
+            )
+
+            gr.html(f'<br><span class="icon">{DIMENSIONS_SYMBOL}</span><br>')
+
+            self.dimensions, self.ar_calc = gr.columns(
+                2,
+                [
+                    gr.textbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_CALCULATOR
+                            )
+                        ],
+                        default="",
+                        label="Width",
+                        elem_id="ar_width",
+                    ),
+                    gr.textbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_CALCULATOR
+                            )
+                        ],
+                        default="",
+                        label="Height",
+                        elem_id="ar_height",
+                    ),
+                ],
+            )
+
+            gr.button(
+                "Apply",
+                elem_id="calculate_aspect_ratio",
+                width=250,
+                outline=True,
+                primary=True,
+            )
+
+            ar_options, _ = gr.columns(
+                2,
+                [
+                    gr.checkbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_SWITCH_VALUES
+                            )
+                        ],
+                        default=False,
+                        label="Switch values",
+                        elem_id="ar_switch_values",
+                    ),
+                    gr.checkbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_DIMENSIONS
+                            )
+                        ],
+                        default=False,
+                        label="Change dimensions",
+                        elem_id="ar_change_dimensions",
+                    ),
+                ],
+            )
+
+            gr.html(f'<br><span class="icon">{REVERSE_LOGIC_SYMBOL}</span><br>')
+
+            gr.button(
+                "Apply",
+                elem_id="reverse_logic_aspect_ratio",
+                width=250,
+                outline=True,
+                primary=True,
+            )
+
+            gr.button(
+                "Reset",
+                elem_id="reset_aspect_ratio",
+                width=250,
+                secondary=True,
+                outline=True,
+            )
+
+            gr.html(f'<br><span class="icon">{IMAGE_DIMENSIONS_SYMBOL}</span><br>')
+
+            ar_options, _ = gr.columns(
+                2,
+                [
+                    gr.checkbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_IMAGE_DIMENSIONS
+                            )
+                        ],
+                        default=False,
+                        label="Use image dimensions",
+                        elem_id="ar_use_image_dimensions",
+                    ),
+                    gr.checkbox(
+                        aspect_ratio_labels[
+                            aspect_ratio_labels.index(
+                                self.AR_REVERSE_LOGIC
+                            )
+                        ],
+                        default=False,
+                        label="Reverse logic",
+                        elem_id="ar_reverse_logic",
+                    ),
+                ],
+            )
+
+            gr.button(
+                "Apply",
+                elem_id="ar_image_dimensions_aspect_ratio",
+                width=250,
+                outline=True,
+                primary=True,
+            )
+
+            gr.html(f'<br><span class="icon">{ROUND_SYMBOL}</span><br>')
+
+            gr.button(
+                "Apply",
+                elem_id="ar_round_aspect_ratio",
+                width=250,
+                outline=True,
+                primary=True,
+            )
+
+            gr.button(
+                "Reset",
+                elem_id="reset_aspect_ratio",
+                width=250,
+                secondary=True,
+                outline=True,
+            )
+
+            gr.button(
+                "Write to file",
+                elem_id="write_aspect_ratios",
+                width=250,
+                secondary=True,
+                outline=True,
+            )
+
+            gr.html(
+                f'<br><span class="icon">{CALCULATOR_SYMBOL}</span><br><br>'
+            )
+
+            gr.button(
+                "Reset",
+                elem_id="reset_calculator",
+                width=250,
+                secondary=True,
+                outline=True,
+            )
+
+        return self
+
+    def run(self, img, txt2img, txt):
+        if self.ar_button_titles.index(self.ar_button) < 4:
+            if self.ar_button_titles.index(self.ar_button) == 0:
+                if self.ar_button == self.aspect_ratios[0]:
+                    return txt2img if txt else img
+
+            if self.ar_button == self.aspect_ratios[0]:
+                new_ar = ResButton(self.ar_calc).reset()
+                ar = [
+                    new_ar[0] / new_ar[1],
+                    solve_aspect_ratio(
+                        new_ar[0], new_ar[1], 16, 9
+                    ),
                 ]
-
-                with contextlib.suppress(AttributeError):
-                    for b in btns:
-                        if is_img2img:
-                            resolution = [self.i2i_w, self.i2i_h]
-                        else:
-                            resolution = [self.t2i_w, self.t2i_h]
-
-                        b.click(
-                            b.apply,
-                            inputs=resolution,
-                            outputs=resolution,
-                        )
-
-            self.read_resolutions()
-            with gr.Row(
-                elem_id=f'{"img" if is_img2img else "txt"}2img_row_resolutions'
-            ):
-                # Toggle calculator display button
-                arc_show_calculator = gr.Button(
-                    value=REVERSE_LOGIC_SYMBOL,
-                    visible=True,
-                    variant="secondary",
-                    elem_id="arc_show_calculator_button",
-                )
-                arc_hide_calculator = gr.Button(
-                    value=REVERSE_LOGIC_SYMBOL,
-                    visible=False,
-                    variant="primary",
-                    elem_id="arc_hide_calculator_button",
-                )
-
-                btns = [
-                    ResButton(res=res, value=label)
-                    for res, label in zip(self.res, self.res_labels)
+                img.resize(ar)
+            elif self.ar_button == self.aspect_ratios[1]:
+                new_ar = ResButton(self.ar_calc).reset()
+                ar = [
+                    new_ar[0] / new_ar[1],
+                    solve_aspect_ratio(
+                        new_ar[0], new_ar[1], 4, 3
+                    ),
                 ]
-                with contextlib.suppress(AttributeError):
-                    for b in btns:
-                        if is_img2img:
-                            resolution = [self.i2i_w, self.i2i_h]
-                        else:
-                            resolution = [self.t2i_w, self.t2i_h]
+                img.resize(ar)
+            elif self.ar_button == self.aspect_ratios[2]:
+                new_ar = ResButton(self.ar_calc).reset()
+                ar = [
+                    new_ar[0] / new_ar[1],
+                    solve_aspect_ratio(
+                        new_ar[0], new_ar[1], 3, 2
+                    ),
+                ]
+                img.resize(ar)
+            elif self.ar_button == self.aspect_ratios[3]:
+                new_ar = ResButton(self.ar_calc).reset()
+                ar = [
+                    new_ar[0] / new_ar[1],
+                    solve_aspect_ratio(
+                        new_ar[0], new_ar[1], 1, 1
+                    ),
+                ]
+                img.resize(ar)
+            return txt2img if txt else img
+        else:
+            if self.ar_button == self.aspect_ratios[4]:
+                if not txt:
+                    return img
+                if self.ar_button == self.aspect_ratios[4]:
+                    if txt2img:
+                        return img
+                    return txt2img
+            if self.ar_button == self.aspect_ratios[5]:
+                if not txt:
+                    return img
+                if self.ar_button == self.aspect_ratios[5]:
+                    if txt2img:
+                        return img
+                    return txt2img
+            if self.ar_button == self.aspect_ratios[6]:
+                new_ar = ResButton(self.ar_calc).reset()
+                ar = [
+                    new_ar[0] / new_ar[1],
+                    solve_aspect_ratio(
+                        new_ar[0], new_ar[1], 4, 3
+                    ),
+                ]
+                if not txt:
+                    return img.resize(ar)
+                if self.ar_button == self.aspect_ratios[6]:
+                    if txt2img:
+                        return img.resize(ar)
+                    if self.switch_values:
+                        return txt2img.resize(ar)
+                    return img
+            return txt2img if txt else img
 
-                        b.click(
-                            b.reset,
-                            outputs=resolution,
+    def ar_switch(self, w, h):
+        return [h, w]
+
+    def ar_change(self, w, h):
+        return [w, h]
+
+    def ar_reverse(self, w, h):
+        return [h, w]
+
+    def ar_round(self, w, h):
+        return [w, h]
+
+class ScriptChooser(scripts.Script):
+    def title(self):
+        return "Script chooser"
+
+    def show(self, is_img2img):
+        return scripts.AlwaysVisible
+
+    def ui(self, is_img2img):
+        scripts.read_scripts()
+        return scripts.scripts
+
+    def run(self, img, txt2img, txt):
+        return img
+
+class Titlebar(ToolButton):
+    def __init__(self, value="", **kwargs):
+        super().__init__(**kwargs)
+        self.value = value
+
+    def run(self):
+        return self.value
+
+class AspectRatio(gr.Interface):
+    def __init__(self, AR_NAME, AR_CALCULATOR, AR_SWITCH_VALUES, AR_DIMENSIONS, AR_IMAGE_DIMENSIONS, AR_REVERSE_LOGIC, AR_ROUND, scripts):
+        super().__init__(
+            scripts,
+            [
+                gr.Input("Image", type="image", label="Image"),
+                gr.Input("Text to Image", type="image", label="Text to Image"),
+                gr.Input("Text", type="textbox", label="Text"),
+            ],
+            [
+                gr.Output("Image", type="image", label="Image"),
+                gr.Output("Text to Image", type="image", label="Text to Image"),
+                gr.Output("Text", type="textbox", label="Text"),
+            ],
+            layout="vertical",
+        )
+
+        self.AR_NAME = AR_NAME
+        self.AR_CALCULATOR = AR_CALCULATOR
+        self.AR_SWITCH_VALUES = AR_SWITCH_VALUES
+        self.AR_DIMENSIONS = AR_DIMENSIONS
+        self.AR_IMAGE_DIMENSIONS = AR_IMAGE_DIMENSIONS
+        self.AR_REVERSE_LOGIC = AR_REVERSE_LOGIC
+        self.AR_ROUND = AR_ROUND
+
+        self.add_titlebar()
+        self.add_footer()
+
+    def add_titlebar(self):
+        titlebar = Titlebar(
+            "Aspect Ratio Picker", elem_id="aspect_ratio_titlebar"
+        )
+        self.add_elements([titlebar])
+
+    def add_footer(self):
+        footer = gr.Row(
+            [
+                gr.Column(
+                    [
+                        gr.Button(
+                            "Reset",
+                            elem_id="reset_ar",
+                            width=250,
+                            secondary=True,
+                            outline=True,
                         )
+                    ]
+                ),
+                gr.Column(
+                    [
+                        gr.Button(
+                            "Write to file",
+                            elem_id="write_ar",
+                            width=250,
+                            secondary=True,
+                            outline=True,
+                        )
+                    ]
+                ),
+            ],
+            elem_id="ar_footer",
+        )
+        self.add_elements([footer])
 
-            # Write button_titles.js with labels and comments read from aspect ratios and resolutions files
-            button_titles = [self.aspect_ratio_labels + self.res_labels]
-            button_titles.append(self.aspect_ratio_comments + self.res_comments)
-            write_js_titles_file(button_titles)
+    def get_button_titles(self):
+        button_titles = [
+            ["1:1", "16:9", "4:3", "3:2"],
+            [
+                self.AR_NAME,
+                self.AR_CALCULATOR,
+                self.AR_SWITCH_VALUES,
+                self.AR_DIMENSIONS,
+                self.AR_IMAGE_DIMENSIONS,
+                self.AR_REVERSE_LOGIC,
+                self.AR_ROUND,
+            ],
+        ]
+        return button_titles
 
-            # dummy components needed for JS function
-            dummy_text1 = gr.Text(visible=False)
-            dummy_text2 = gr.Text(visible=False)
-            dummy_text3 = gr.Text(visible=False)
-            dummy_text4 = gr.Text(visible=False)
+def add_aspect_ratio_ui(scripts, AR_NAME, AR_CALCULATOR, AR_SWITCH_VALUES, AR_DIMENSIONS, AR_IMAGE_DIMENSIONS, AR_REVERSE_LOGIC, AR_ROUND):
+    titlebar = AspectRatio(
+        AR_NAME, AR_CALCULATOR, AR_SWITCH_VALUES, AR_DIMENSIONS, AR_IMAGE_DIMENSIONS, AR_REVERSE_LOGIC, AR_ROUND, scripts
+    )
+    titlebar.display()
+    return titlebar
 
-            # Aspect Ratio Calculator
-            with gr.Column(
-                visible=False, variant="panel", elem_id="arc_panel"
-            ) as arc_panel:
-                arc_title_heading = gr.Markdown(value="#### Aspect Ratio Calculator")
-                with gr.Row():
-                    with gr.Column(min_width=150):
-                        arc_width1 = gr.Number(label="Width 1")
-                        arc_height1 = gr.Number(label="Height 1")
 
-                    with gr.Column(min_width=150):
-                        arc_desired_width = gr.Number(label="Width 2")
-                        arc_desired_height = gr.Number(label="Height 2")
+@contextlib.contextmanager
+def no_stdout():
+    with open(os.devnull, "w") as fnull:
+        with contextlib.redirect_stdout(fnull):
+            yield
 
-                    with gr.Column(min_width=150):
-                        arc_ar_display = gr.Markdown(value="Aspect Ratio:")
-                        with gr.Row(
-                            elem_id=f'{"img" if is_img2img else "txt"}2img_arc_tool_buttons'
-                        ):
-                            # Switch resolution values button
-                            arc_swap = ToolButton(value=SWITCH_VALUES_SYMBOL)
-                            arc_swap.click(
-                                lambda w, h, w2, h2: (h, w, h2, w2),
-                                inputs=[
-                                    arc_width1,
-                                    arc_height1,
-                                    arc_desired_width,
-                                    arc_desired_height,
-                                ],
-                                outputs=[
-                                    arc_width1,
-                                    arc_height1,
-                                    arc_desired_width,
-                                    arc_desired_height,
-                                ],
-                            )
 
-                            with contextlib.suppress(AttributeError):
-                                # For img2img tab
-                                if is_img2img:
-                                    # Get slider dimensions button
-                                    resolution = [self.i2i_w, self.i2i_h]
-                                    arc_get_img2img_dim = ToolButton(
-                                        value=get_dimensions_symbol
-                                    )
-                                    arc_get_img2img_dim.click(
-                                        lambda w, h: (w, h),
-                                        inputs=resolution,
-                                        outputs=[arc_width1, arc_height1],
-                                    )
+scripts.register_script(
+    AspectRatioScript(
+        AR_NAME="Aspect ratio picker",
+        AR_CALCULATOR="Calculator",
+        AR_SWITCH_VALUES="Switch values",
+        AR_DIMENSIONS="Change dimensions",
+        AR_IMAGE_DIMENSIONS="Use image dimensions",
+        AR_REVERSE_LOGIC="Reverse logic",
+        AR_ROUND="Round",
+    )
+)
 
-                                    # Javascript function to select image element from current img2img tab
-                                    current_tab_image = """
-                                        function current_tab_image(...args) {
-                                            const tab_index = get_img2img_tab_index();
-                                            // Get current tab's image (on Batch tab, use image from img2img tab)
-                                            if (tab_index == 5) {
-                                                image = args[0];
-                                            } else {
-                                                image = args[tab_index];
-                                            }
-                                            // On Inpaint tab, select just the image and drop the mask
-                                            if (tab_index == 2 && image !== null) {
-                                                image = image["image"];
-                                            }
-                                            return [image, null, null, null, null];
-                                        }
-                                        """
-
-                                    # Get current tab's image button
-                                    arc_get_img2img_tab_image = ToolButton(
-                                        value=IMAGE_DIMENSIONS_SYMBOL
-                                    )
-                                    arc_get_img2img_tab_image.click(
-                                        lambda w, h: current_tab_image(),
-                                        outputs=[
-                                            arc_width1,
-                                            arc_height1,
-                                            dummy_text1,
-                                            dummy_text2,
-                                            dummy_text3,
-                                        ],
-                                    )
-
-                                    # Calculate new aspect ratio button
-                                    arc_calculate_new_ar = ToolButton(
-                                        value=CALCULATOR_SYMBOL
-                                    )
-                                    arc_calculate_new_ar.click(
-                                        solve_aspect_ratio,
-                                        inputs=[
-                                            arc_width1,
-                                            arc_height1,
-                                            arc_desired_width,
-                                            arc_desired_height,
-                                        ],
-                                        outputs=[arc_ar_display],
-                                    )
-
-                                # For txt2img tab
-                                else:
-                                    # Get slider dimensions button
-                                    resolution = [self.t2i_w, self.t2i_h]
-                                    arc_get_txt2img_dim = ToolButton(
-                                        value=get_dimensions_symbol
-                                    )
-                                    arc_get_txt2img_dim.click(
-                                        lambda w, h: (w, h),
-                                        inputs=resolution,
-                                        outputs=[arc_width1, arc_height1],
-                                    )
-
-                                    # Get text dimensions button
-                                    arc_get_text_dim = ToolButton(
-                                        value=get_image_dimensions_symbol
-                                    )
-                                    arc_get_text_dim.click(
-                                        lambda w, h, w2, h2: (w, h, w2, h2),
-                                        inputs=[
-                                            arc_width1,
-                                            arc_height1,
-                                            arc_desired_width,
-                                            arc_desired_height,
-                                        ],
-                                        outputs=[
-                                            arc_width1,
-                                            arc_height1,
-                                            arc_desired_width,
-                                            arc_desired_height,
-                                        ],
-                                    )
-
-                                    # Calculate new aspect ratio button
-                                    arc_calculate_new_ar = ToolButton(
-                                        value=CALCULATOR_SYMBOL
-                                    )
-                                    arc_calculate_new_ar.click(
-                                        solve_aspect_ratio,
-                                        inputs=[
-                                            arc_width1,
-                                            arc_height1,
-                                            arc_desired_width,
-                                            arc_desired_height,
-                                        ],
-                                        outputs=[arc_ar_display],
-                                    )
-
-                            # Toggles calculator display
-                            arc_show_calculator.click(
-                                lambda x: True, outputs=[arc_hide_calculator]
-                            )
-                            arc_hide_calculator.click(
-                                lambda x: False, outputs=[arc_show_calculator]
-                            )
-
-                # Javascript function to get current tab index
-get_img2img_tab_index = """
-function get_img2img_tab_index() {
-    return document.querySelectorAll(".tab-pane").length - 1 - document.querySelectorAll(".tab-pane.active").length;
-}
-"""
-
-arc_panel.script(get_img2img_tab_index)
-arc_panel.script(current_tab_image)
-arc_panel.script(write_js_titles_file)
-
-        return arc_panel
+if __name__ == "__main__":
+    scripts.read_scripts()
+    gr.interface.Interface(run_multiple=True).launch()
