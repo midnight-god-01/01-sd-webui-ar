@@ -496,14 +496,14 @@ class Titlebar(ToolButton):
         return self.value
 
 class AspectRatio(gr.Interface):
-def __init__(self):
-    self.AR_NAME = "Aspect ratio picker"
-    self.AR_CALCULATOR = "Calculator"
-    self.AR_SWITCH_VALUES = "Switch values"
-    self.AR_DIMENSIONS = "Change dimensions"
-    self.AR_IMAGE_DIMENSIONS = "Use image dimensions"
-    self.AR_REVERSE_LOGIC = "Reverse logic"
-    self.AR_ROUND = "Round"
+    def __init__(self):
+        self.AR_NAME = "Aspect ratio picker"
+        self.AR_CALCULATOR = "Calculator"
+        self.AR_SWITCH_VALUES = "Switch values"
+        self.AR_DIMENSIONS = "Change dimensions"
+        self.AR_IMAGE_DIMENSIONS = "Use image dimensions"
+        self.AR_REVERSE_LOGIC = "Reverse logic"
+        self.AR_ROUND = "Round"
 
         self.add_titlebar()
         self.add_footer()
