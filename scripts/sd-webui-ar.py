@@ -449,16 +449,14 @@ class AspectRatioScript(scripts.Script):
                             )
 
                 # Javascript function to get current tab index
-                get_img2img_tab_index = """
-                    function get_img2img_tab_index() {
-                        return document.querySelectorAll(".tab-pane").length - 1 - document.querySelectorAll(".tab-pane.active").length;
-                    }
-                    """
+get_img2img_tab_index = """
+function get_img2img_tab_index() {
+    return document.querySelectorAll(".tab-pane").length - 1 - document.querySelectorAll(".tab-pane.active").length;
+}
+"""
 
-                arc_panel.script(
-                    get_img2img_tab_index
-                )
-                arc_panel.script(current_tab_image)
-                arc_panel.script(write_js_titles_file)
+arc_panel.script(get_img2img_tab_index)
+arc_panel.script(current_tab_image)
+arc_panel.script(write_js_titles_file)
 
         return arc_panel
