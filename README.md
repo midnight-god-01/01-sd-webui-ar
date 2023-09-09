@@ -15,7 +15,7 @@ You can install the Aspect Ratio Selector extension using one of the following m
 
 1. Navigate to the `Extensions` tab.
 2. Select `Install from URL`.
-3. Paste the following URL: `(https://github.com/midnight-god-01/sd-webui-ar.git)`.
+3. Paste the following URL: `(https://github.com/midnight-god-01/01-sd-webui-ar.git)`.
 4. Click on `Install`.
 
 ### Method 2: Install with Git Clone (Alternative)
@@ -25,7 +25,7 @@ You can install the Aspect Ratio Selector extension using one of the following m
 3. Run the following command to clone the extension repository:
 
 ```bash
-git clone https://github.com/midnight-god-01/sd-webui-ar.git
+git clone https://github.com/midnight-god-01/01-sd-webui-ar.git
 ```
 
 4. Once the cloning process is complete, you can use the extension as described in the "Usage" section below.
