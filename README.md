@@ -1,21 +1,38 @@
 # Stable Diffusion WebUI Aspect Ratio Selector Extension
 
-Enhance your [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui.git) experience with the Aspect Ratio Selector extension.
+Elevate your [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui.git) experience with the Aspect Ratio Selector extension.
 
 ## Updates
+- **09/09/2023** : Automatic 1111 Version: v1.6.0 support, lobe theme version: 3.0.4 support, added more aspect ratios to the main code, improved code organization, and more.
 
-- **20/02/2023** :warning: **Important Update**: This update will replace your local configuration files (`aspect_ratios.txt` and `resolutions.txt`) with new default ones. These can be easily customized and preserved for future use. For more details, please refer to [this link](https://github.com/alemelis/sd-webui-ar/issues/9).
+- **20/02/2023** :warning: **Important Update**: This update will replace your local configuration files (`aspect_ratios.txt` and `resolutions.txt`) with new default ones. These can be easily customized and preserved for future use. For detailed instructions, please refer to [this link](https://github.com/alemelis/sd-webui-ar/issues/9).
 
 ## Installation
+
+You can install the Aspect Ratio Selector extension using one of the following methods:
+
+### Method 1: Install from URL
 
 1. Navigate to the `Extensions` tab.
 2. Select `Install from URL`.
 3. Paste the following URL: `(https://github.com/midnight-god-01/sd-webui-ar.git)`.
 4. Click on `Install`.
 
-Here's a glimpse of the user interface after installing this extension:
+### Method 2: Install with Git Clone (Alternative)
 
-![Screenshot 2023-03-30 at 20 37 56](https://user-images.githubusercontent.com/4661737/228946744-dbffc4c6-8a3f-4a42-8e47-1056b3558afc.png)
+1. Open your terminal or command prompt.
+2. Navigate to the directory where you want to install the extension.
+3. Run the following command to clone the extension repository:
+
+```bash
+git clone https://github.com/midnight-god-01/sd-webui-ar.git
+```
+
+4. Once the cloning process is complete, you can use the extension as described in the "Usage" section below.
+
+Here's a sneak peek of the user interface after installing this extension:
+
+https://github.com/midnight-god-01/01-sd-webui-ar/blob/main/Screenshots/Screenshot%202023-09-09%20221729.png
 
 ## Usage
 
@@ -79,6 +96,7 @@ The calculator allows you to determine new width or height values based on the a
 - Specify the desired width or height and click either `Calculate Height` or `Calculate Width` to compute the missing value.
 - Click `Apply` to transfer the values to the txt2txt/img2img sliders.
 
-![Basic usage of the aspect ratio calculator](https://user-images.githubusercontent.com/121050401/229391634-4ec06027-e603-4672-bad9-ec77647b0941.gif)
+https://github.com/midnight-god-01/01-sd-webui-ar/blob/main/Screenshots/Screenshot%202023-09-09%20221858.png 
 
 Enjoy the enhanced functionality of your Stable Diffusion WebUI with the Aspect Ratio Selector extension!
+
