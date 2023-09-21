@@ -146,9 +146,14 @@ def write_aspect_ratios_file(filename):
 
 def write_resolutions_file(filename):
     resolutions = [
-        "1, 512, 512 # 1:1 square\n",
-        "2, 768, 512 # 3:2 landscape\n",
-        "3, 403, 716 # 9:16 portrait",
+        "1:1, 512, 512\n",
+        "3:2, 768, 512\n",
+        "9:16, 403, 716\n",
+        "XL1:1, 1024, 1024\n",
+        "XL5:4, 1152, 896\n",
+        "XL3:2, 1216, 832\n",
+        "XL16:9, 1344, 768\n",
+        "XL21:9, 1536, 640\n"
     ]
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(resolutions)
